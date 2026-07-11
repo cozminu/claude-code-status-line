@@ -12,10 +12,4 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: DEBUG shellcheck
-        run: |
-          shellcheck --version
-          shellcheck statusline-command.sh
-          echo "exit: $?"
-        continue-on-error: true
       - run: ./run-tests.sh

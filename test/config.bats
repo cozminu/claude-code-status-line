@@ -60,8 +60,8 @@ EOF
   echo 'STATUSLINE_PACE_TOL=15' > "$STATUSLINE_CONFIG"
   local YELLOW=$'\033[33m'
   run render_full
-  [[ "${lines[1]}" == *"7d"*"${YELLOW}▄"* ]]
-  [[ "${lines[1]}" != *"7d"*"█████"* ]]
+  [[ "${lines[1]}" == *"4d"*"${YELLOW}▅"* ]]
+  [[ "${lines[1]}" != *"4d"*"█████"* ]]
 }
 
 @test "each line-2 toggle hides exactly its segment" {
