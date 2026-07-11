@@ -115,9 +115,12 @@ bar() {
   local pct="$1" width="$STATUSLINE_BAR_WIDTH"
   local filled=$(( pct * width / 100 ))
   [ "$filled" -gt "$width" ] && filled="$width"
+  [ "$filled" -lt 0 ] && filled=0
   local empty=$(( width - filled ))
-  printf '%*s' "$filled" '' | tr ' ' '█'
-  printf '%*s' "$empty" '' | tr ' ' '░'
+  local out="" i
+  for (( i = 0; i < filled; i++ )); do out+="█"; done
+  for (( i = 0; i < empty; i++ )); do out+="░"; done
+  printf "%s" "$out"
 }
 
 # Usage bar with a pace tick marking where usage "should" be if evenly spent
