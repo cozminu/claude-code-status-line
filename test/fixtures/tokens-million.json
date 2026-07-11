@@ -1,0 +1,5 @@
+{
+  "model": {"display_name": "Opus 4.8"},
+  "workspace": {"current_dir": "/nonexistent/bigctx"},
+  "context_window": {"used_percentage": 49.6, "total_input_tokens": 2400000, "total_output_tokens": 100000}
+}

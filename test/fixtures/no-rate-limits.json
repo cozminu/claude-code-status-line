@@ -1,0 +1,7 @@
+{
+  "model": {"display_name": "Sonnet 5"},
+  "effort": {"level": "medium"},
+  "workspace": {"current_dir": "/nonexistent/apibilling"},
+  "context_window": {"used_percentage": 65, "total_input_tokens": 120000, "total_output_tokens": 10000},
+  "cost": {"total_cost_usd": 3.10}
+}

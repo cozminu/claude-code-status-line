@@ -1,0 +1,10 @@
+{
+  "model": {"display_name": "Haiku 4.5"},
+  "effort": {"level": "low"},
+  "workspace": {"current_dir": "/nonexistent/noresets"},
+  "rate_limits": {
+    "five_hour": {"used_percentage": 45},
+    "seven_day": {"used_percentage": 85}
+  },
+  "cost": {"total_cost_usd": 0.07}
+}

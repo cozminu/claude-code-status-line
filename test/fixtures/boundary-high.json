@@ -1,0 +1,7 @@
+{
+  "model": {"display_name": "Sonnet 5"},
+  "effort": {"level": "max"},
+  "workspace": {"current_dir": "/nonexistent/boundhigh"},
+  "context_window": {"used_percentage": 50, "total_input_tokens": 1000, "total_output_tokens": 0},
+  "rate_limits": {"five_hour": {"used_percentage": 80}}
+}

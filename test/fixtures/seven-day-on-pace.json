@@ -1,0 +1,5 @@
+{
+  "model": {"display_name": "Fable 5"},
+  "workspace": {"current_dir": "/nonexistent/onpace"},
+  "rate_limits": {"seven_day": {"used_percentage": 52, "resets_at": 1750302400}}
+}

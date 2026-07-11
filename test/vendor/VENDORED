@@ -1,0 +1,2 @@
+bats-core v1.11.1, vendored from https://github.com/bats-core/bats-core/archive/refs/tags/v1.11.1.tar.gz
+Only bin/, lib/, libexec/, LICENSE.md kept. To upgrade: replace this directory with a newer release and update this note.
