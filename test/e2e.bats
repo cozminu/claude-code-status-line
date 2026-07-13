@@ -13,6 +13,8 @@ STATUSLINE_EPOCH=1750000000
 setup() {
   # Hermetic: a real user config file must not influence golden comparisons.
   export STATUSLINE_CONFIG="$BATS_TEST_TMPDIR/no-such.conf"
+  # Hermetic: a real logged-in account must not leak into golden comparisons.
+  export CLAUDE_CONFIG_DIR="$BATS_TEST_TMPDIR/no-such-claude-dir"
 }
 
 check_golden() {
@@ -69,6 +71,14 @@ check_golden() {
 
 @test "empty JSON object: still renders and exits 0" {
   check_golden empty
+}
+
+@test "logged-in account: 3rd line renders the email from CLAUDE_CONFIG_DIR" {
+  CLAUDE_CONFIG_DIR="$BATS_TEST_DIRNAME/fixtures/fake-claude-config" \
+    STATUSLINE_NOW="$STATUSLINE_EPOCH" "$SCRIPT" \
+    < "$BATS_TEST_DIRNAME/fixtures/full.json" \
+    > "$BATS_TEST_TMPDIR/email.out"
+  diff "$BATS_TEST_DIRNAME/golden/email.out" "$BATS_TEST_TMPDIR/email.out"
 }
 
 @test "script exits 0 for every fixture" {

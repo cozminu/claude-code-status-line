@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A single bash script, `statusline-command.sh`, that Claude Code invokes as its `statusLine` command. Claude Code pipes a JSON payload (model info, git workspace info, context-window usage, rate-limit usage, session cost) to the script's stdin on every render, and the script prints a 2-line colored status line to stdout. `README.md` covers install and the user-facing configuration reference; `STDIN_PAYLOAD.md` documents the full input payload.
+A single bash script, `statusline-command.sh`, that Claude Code invokes as its `statusLine` command. Claude Code pipes a JSON payload (model info, git workspace info, context-window usage, rate-limit usage, session cost) to the script's stdin on every render, and the script prints an up-to-3-line colored status line to stdout. `README.md` covers install and the user-facing configuration reference; `STDIN_PAYLOAD.md` documents the full input payload.
 
 Claude Code is configured to run the script from `~/statusline-command.sh`. That path is a symlink to `statusline-command.sh` in this repo — edit the file here, not the symlink target directly.
 
@@ -20,7 +20,7 @@ For one-off manual checks, pipe a synthetic payload:
 echo '{"model":{"display_name":"Sonnet 5"},"workspace":{"current_dir":"'"$PWD"'"},"cost":{"total_cost_usd":1.23}}' | ./statusline-command.sh
 ```
 
-New behavior needs a test in the matching suite: pure helpers → `test/unit.bats` (the script is `source`d, helpers called directly), full renders → a fixture + golden in `test/e2e.bats`, config handling → `test/config.bats`, git segment → `test/git.bats` (builds throwaway repos). Tests set `STATUSLINE_CONFIG` to a nonexistent path so a real user config can't leak in — new suites must do the same.
+New behavior needs a test in the matching suite: pure helpers → `test/unit.bats` (the script is `source`d, helpers called directly), full renders → a fixture + golden in `test/e2e.bats`, config handling → `test/config.bats`, git segment → `test/git.bats` (builds throwaway repos). Tests set `STATUSLINE_CONFIG` to a nonexistent path so a real user config can't leak in, and `CLAUDE_CONFIG_DIR` to a nonexistent path so a real logged-in account email can't leak in either — new suites must do both.
 
 ## Architecture
 
@@ -30,7 +30,7 @@ Layout: color constants → `load_config` → pure helpers → segment builders 
 
 Configuration is resolved by `load_config` with precedence environment > optional config file (`${XDG_CONFIG_HOME:-~/.config}/claude-statusline.conf`, path overridable via `STATUSLINE_CONFIG`) > built-in defaults. Tunables: `STATUSLINE_BAR_WIDTH`, `STATUSLINE_PCT_WARN`/`STATUSLINE_PCT_CRIT` (usage-severity color thresholds), `STATUSLINE_PACE_TOL`; every segment has a `STATUSLINE_SHOW_*` toggle. Defaults must reproduce the golden output exactly — a new knob's default is the previous hard-coded value. Register any new variable in `STATUSLINE_CONFIG_VARS` (the list `load_config` snapshots so env wins over the file) and document it in README.md.
 
-The script builds two `segments`/`line2` bash arrays and joins each with `" | "` (via `join_line`), printing line 1, then line 2. A line whose array is empty prints nothing; the script ends with `exit 0` so an empty trailing line doesn't leak a non-zero status.
+The script builds three `segments`/`line2`/`line3` bash arrays and joins each with `" | "` (via `join_line`), printing line 1, then line 2, then line 3. A line whose array is empty prints nothing (so line 3 can be absent without leaving a blank line, and line 3 shifts up to print as line 2 if line 2 is itself empty); the script ends with `exit 0` so an empty trailing line doesn't leak a non-zero status.
 
 **Line 1** (left to right): project title (repo name, falling back to directory basename) → git branch with dirty/clean indicator, plus staged/modified/untracked file counts (`+N`/`~N`/`?N`) when dirty.
 
@@ -47,3 +47,5 @@ The 5h window renders through `usage_segment(label, pct, reset, window_seconds)`
 The 7d window has its own `seven_day_segment(label, pct, reset, window_seconds)` helper because it renders two ways. By default it's a **compact single-cell pace marker** — one partial-block glyph (`▁▂▃▄▅▆▇█`, via `gauge_glyph`, mapping usage % to 8 levels) whose height encodes usage. It **expands into a full `pace_bar`** only when weekly usage runs genuinely over pace — when `used_percentage − elapsed_pace > STATUSLINE_PACE_TOL`, the same band where `pace_color` turns orange, so expansion and the orange color trigger together. The entire 7d element is colored on the pace scale throughout via `pace_color`: green below the even-spend pace, yellow on pace (within ±`STATUSLINE_PACE_TOL` points), orange over — so the expanded bar is always orange. When no reset time is present pace is unknowable, so it stays a compact marker colored by `pct_color` usage severity and never expands. 7d is the only place using the pace-based color scale and `$ORANGE`; the 5h bar stays on the usage-severity scale. (Because 7d only expands when over pace, its `pace_bar` tick is always the solid `▮` form.)
 
 Branch, dirty state, and staged/modified/untracked counts are all derived from a single `git -C "$cwd" --no-optional-locks status --porcelain=v2 --branch` call, parsed once. The whole segment is skipped when that call returns empty (not inside a git repo) — there's no error path, checks just fail closed via `[ -n ... ]` guards.
+
+**Line 3** (optional, on by default via `STATUSLINE_SHOW_EMAIL`): the logged-in Claude account's email. This is the one segment that ignores the stdin payload entirely — `STDIN_PAYLOAD.md` documents no account/user field — and instead reads `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.claude.json` → `.oauthAccount.emailAddress` via `account_email()`, which fails closed to `""` (missing dir/file/field, malformed JSON) exactly like the other guarded segments. It only renders when `using_default_claude_profile()` is false, i.e. `CLAUDE_CONFIG_DIR` is explicitly set to something other than `$HOME/.claude` — the point is to flag when you're on a non-default profile, so it stays silent on the common case. Both checks gate independently in `main` (`STATUSLINE_SHOW_EMAIL=1 AND non-default profile`).

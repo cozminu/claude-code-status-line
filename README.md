@@ -3,17 +3,24 @@
 A single bash script that renders [Claude Code](https://claude.com/claude-code)'s
 status line. Claude Code pipes a JSON payload (model, git workspace, context
 usage, rate limits, session cost) to the script's stdin on every prompt render;
-the script prints two ANSI-colored lines:
+the script prints up to three ANSI-colored lines:
 
 ```
 status-line | main ✗ +1~2?1
 Fable 5 | high | 84k | 3h ███░░▯░░░░ | 4d ▄ | $1.23
+you@example.com  # only on a non-default CLAUDE_CONFIG_DIR profile
 ```
 
 - **Line 1** — project title, git branch with dirty/clean indicator and
   staged (`+N`) / modified (`~N`) / untracked (`?N`) counts.
 - **Line 2** — model name (colored by family), reasoning effort, context
   tokens used, 5-hour and 7-day subscription usage, session cost.
+- **Line 3** (optional, on by default) — the logged-in Claude account's
+  email, read from `$CLAUDE_CONFIG_DIR/.claude.json` rather than the stdin
+  payload. Only shown when `CLAUDE_CONFIG_DIR` points somewhere other than
+  Claude Code's own default (`~/.claude`) — i.e. only on a non-default
+  profile, where it's actually useful for telling profiles apart at a
+  glance. Disable entirely with `STATUSLINE_SHOW_EMAIL=0`.
 
 The 5h/7d labels are a live reset countdown — integer hours remaining for
 the 5h window, integer days remaining for the 7d window (`3h`, `4d`, ...),
@@ -78,6 +85,7 @@ STATUSLINE_SHOW_COST=0
 | `STATUSLINE_SHOW_FIVE_HOUR` | `1` | 5-hour usage bar |
 | `STATUSLINE_SHOW_SEVEN_DAY` | `1` | 7-day pace marker |
 | `STATUSLINE_SHOW_COST` | `1` | Session cost |
+| `STATUSLINE_SHOW_EMAIL` | `1` | Logged-in account email (line 3), shown only on a non-default `CLAUDE_CONFIG_DIR` profile |
 | `STATUSLINE_NOW` | *(unset)* | Test-only: pin the clock (unix seconds) for deterministic pace math |
 | `STATUSLINE_CONFIG` | *(see above)* | Test-only: alternate config file path |
 

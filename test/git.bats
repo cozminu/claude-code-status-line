@@ -13,6 +13,8 @@ YELLOW=$'\033[33m'
 setup() {
   # Hermetic: a real user config file must not influence expected output.
   export STATUSLINE_CONFIG="$BATS_TEST_TMPDIR/no-such.conf"
+  # Hermetic: a real logged-in account must not leak into expected output.
+  export CLAUDE_CONFIG_DIR="$BATS_TEST_TMPDIR/no-such-claude-dir"
   # Isolate from the user's git config so status output is deterministic.
   export GIT_CONFIG_GLOBAL=/dev/null
   export GIT_CONFIG_SYSTEM=/dev/null

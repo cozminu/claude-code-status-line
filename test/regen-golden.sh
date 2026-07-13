@@ -11,6 +11,8 @@ cd "$(dirname "$0")" || exit 1
 export STATUSLINE_NOW=1750000000
 # Goldens are defined at default config; ignore any real user config file.
 export STATUSLINE_CONFIG=/nonexistent/statusline.conf
+# Ignore any real logged-in account so goldens don't capture your own email.
+export CLAUDE_CONFIG_DIR=/nonexistent/claude-config-dir
 
 for fixture in fixtures/*.json; do
   name=$(basename "$fixture" .json)

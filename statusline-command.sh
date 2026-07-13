@@ -29,7 +29,7 @@ STATUSLINE_CONFIG_VARS="STATUSLINE_BAR_WIDTH STATUSLINE_PCT_WARN
   STATUSLINE_PCT_CRIT STATUSLINE_PACE_TOL STATUSLINE_SHOW_TITLE
   STATUSLINE_SHOW_GIT STATUSLINE_SHOW_MODEL STATUSLINE_SHOW_EFFORT
   STATUSLINE_SHOW_CONTEXT STATUSLINE_SHOW_FIVE_HOUR
-  STATUSLINE_SHOW_SEVEN_DAY STATUSLINE_SHOW_COST"
+  STATUSLINE_SHOW_SEVEN_DAY STATUSLINE_SHOW_COST STATUSLINE_SHOW_EMAIL"
 
 # Sources the optional config file (plain bash assignments, e.g.
 # STATUSLINE_BAR_WIDTH=20) and fills in defaults. Environment variables win
@@ -60,6 +60,7 @@ load_config() {
   : "${STATUSLINE_SHOW_FIVE_HOUR:=1}"
   : "${STATUSLINE_SHOW_SEVEN_DAY:=1}"
   : "${STATUSLINE_SHOW_COST:=1}"
+  : "${STATUSLINE_SHOW_EMAIL:=1}"       # 3rd line: logged-in account email
 }
 
 # Color scale for reasoning effort: low -> medium -> high -> xhigh -> max
@@ -259,6 +260,22 @@ seven_day_segment() {
   printf '%s%s%s %s%s%s' "$DIM" "$label" "$RESET" "$color" "$glyph_or_bar" "$RESET"
 }
 
+# Email of the currently logged-in Claude account, read from the active
+# profile's config file (CLAUDE_CONFIG_DIR, defaulting to ~/.claude like
+# Claude Code itself) rather than the stdin payload, which carries no
+# account/user field. Missing dir/file/field all fall through to "".
+account_email() {
+  local conf_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+  jq -r '.oauthAccount.emailAddress // ""' "$conf_dir/.claude.json" 2>/dev/null
+}
+
+# True when CLAUDE_CONFIG_DIR points at Claude Code's own default profile dir
+# (unset, or explicitly set to it) -- the case where showing the account
+# email adds no signal since there's only ever one profile in play.
+using_default_claude_profile() {
+  [ "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" = "$HOME/.claude" ]
+}
+
 join_line() {
   local sep out i
   sep="${DIM} | ${RESET}"
@@ -415,9 +432,20 @@ main() {
     [ -n "$cost_fmt" ] && line2+=("${GREEN}${cost_fmt}${RESET}")
   fi
 
+  # Line 3: logged-in Claude account email, read from CLAUDE_CONFIG_DIR rather
+  # than the stdin payload (which carries no account/user field). Only shown
+  # on a non-default profile, where knowing which account is active is
+  # actually useful signal.
+  line3=()
+  if [ "$STATUSLINE_SHOW_EMAIL" = 1 ] && ! using_default_claude_profile; then
+    email=$(account_email)
+    [ -n "$email" ] && line3+=("${CYAN}${email}${RESET}")
+  fi
+
   # ${arr[@]+...} keeps empty-array expansion legal under set -u on bash 3.2.
   printf '%s\n' "$(join_line ${segments[@]+"${segments[@]}"})"
   [ "${#line2[@]}" -gt 0 ] && printf '%s\n' "$(join_line ${line2[@]+"${line2[@]}"})"
+  [ "${#line3[@]}" -gt 0 ] && printf '%s\n' "$(join_line ${line3[@]+"${line3[@]}"})"
   exit 0
 }
 

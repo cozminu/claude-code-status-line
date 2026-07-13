@@ -173,3 +173,37 @@ setup() {
 @test "seven_day_segment: no reset time falls back to severity-colored compact glyph" {
   [ "$(seven_day_segment 7d 85 '' 604800)" = "${DIM}7d${RESET} ${RED}▇${RESET}" ]
 }
+
+# --- account_email -------------------------------------------------------------
+
+@test "account_email: reads oauthAccount.emailAddress from CLAUDE_CONFIG_DIR/.claude.json" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude"
+  mkdir -p "$dir"
+  echo '{"oauthAccount":{"emailAddress":"test@example.com"}}' > "$dir/.claude.json"
+  [ "$(CLAUDE_CONFIG_DIR="$dir" account_email)" = "test@example.com" ]
+}
+
+@test "account_email: empty string when CLAUDE_CONFIG_DIR has no .claude.json" {
+  [ "$(CLAUDE_CONFIG_DIR="$BATS_TEST_TMPDIR/no-such-dir" account_email)" = "" ]
+}
+
+@test "account_email: empty string when .claude.json has no oauthAccount" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude-nologin"
+  mkdir -p "$dir"
+  echo '{}' > "$dir/.claude.json"
+  [ "$(CLAUDE_CONFIG_DIR="$dir" account_email)" = "" ]
+}
+
+# --- using_default_claude_profile -----------------------------------------------
+
+@test "using_default_claude_profile: true when CLAUDE_CONFIG_DIR is unset" {
+  (unset CLAUDE_CONFIG_DIR; HOME=/fake/home using_default_claude_profile)
+}
+
+@test "using_default_claude_profile: true when CLAUDE_CONFIG_DIR equals \$HOME/.claude" {
+  HOME=/fake/home CLAUDE_CONFIG_DIR=/fake/home/.claude using_default_claude_profile
+}
+
+@test "using_default_claude_profile: false when CLAUDE_CONFIG_DIR points elsewhere" {
+  ! HOME=/fake/home CLAUDE_CONFIG_DIR=/fake/home/.claude-perso using_default_claude_profile
+}

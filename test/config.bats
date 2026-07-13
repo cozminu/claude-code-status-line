@@ -7,6 +7,8 @@ STATUSLINE_EPOCH=1750000000
 setup() {
   # Hermetic: never read a real user config unless a test writes one here.
   export STATUSLINE_CONFIG="$BATS_TEST_TMPDIR/statusline.conf"
+  # Hermetic: never read a real logged-in account unless a test points here.
+  export CLAUDE_CONFIG_DIR="$BATS_TEST_TMPDIR/no-such-claude-dir"
   export STATUSLINE_NOW="$STATUSLINE_EPOCH"
 }
 
@@ -84,6 +86,44 @@ EOF
   done
 }
 
+@test "email toggle on: 3rd line shows the account email from CLAUDE_CONFIG_DIR" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude"
+  mkdir -p "$dir"
+  echo '{"oauthAccount":{"emailAddress":"test@example.com"}}' > "$dir/.claude.json"
+  [[ "$(CLAUDE_CONFIG_DIR="$dir" render_full | strip_ansi)" == *"test@example.com"* ]]
+}
+
+@test "email toggle off: 3rd line hidden even with a logged-in account" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude"
+  mkdir -p "$dir"
+  echo '{"oauthAccount":{"emailAddress":"test@example.com"}}' > "$dir/.claude.json"
+  [[ "$(CLAUDE_CONFIG_DIR="$dir" STATUSLINE_SHOW_EMAIL=0 render_full | strip_ansi)" != *"test@example.com"* ]]
+}
+
+@test "default profile: email hidden even with an account file, when CLAUDE_CONFIG_DIR is unset" {
+  local home="$BATS_TEST_TMPDIR/fake-home"
+  mkdir -p "$home/.claude"
+  echo '{"oauthAccount":{"emailAddress":"test@example.com"}}' > "$home/.claude/.claude.json"
+  local out
+  out=$(unset CLAUDE_CONFIG_DIR; HOME="$home" render_full | strip_ansi)
+  [[ "$out" != *"test@example.com"* ]]
+}
+
+@test "default profile: email hidden even with an account file, when CLAUDE_CONFIG_DIR equals \$HOME/.claude" {
+  local home="$BATS_TEST_TMPDIR/fake-home2"
+  mkdir -p "$home/.claude"
+  echo '{"oauthAccount":{"emailAddress":"test@example.com"}}' > "$home/.claude/.claude.json"
+  local out
+  out=$(HOME="$home" CLAUDE_CONFIG_DIR="$home/.claude" render_full | strip_ansi)
+  [[ "$out" != *"test@example.com"* ]]
+}
+
+@test "no logged-in account: email toggle on but no 3rd line renders" {
+  local out
+  out=$(render_full | strip_ansi)
+  [ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" = "2" ]
+}
+
 @test "title toggle empties line 1 for a non-git payload" {
   local plain
   plain=$(STATUSLINE_SHOW_TITLE=0 "$SCRIPT" < "$BATS_TEST_DIRNAME/fixtures/full.json" | strip_ansi)
@@ -103,7 +143,7 @@ EOF
 @test "all toggles off still exits 0 and prints the (empty) line 1" {
   run env STATUSLINE_SHOW_TITLE=0 STATUSLINE_SHOW_GIT=0 STATUSLINE_SHOW_MODEL=0 \
     STATUSLINE_SHOW_EFFORT=0 STATUSLINE_SHOW_CONTEXT=0 STATUSLINE_SHOW_FIVE_HOUR=0 \
-    STATUSLINE_SHOW_SEVEN_DAY=0 STATUSLINE_SHOW_COST=0 \
+    STATUSLINE_SHOW_SEVEN_DAY=0 STATUSLINE_SHOW_COST=0 STATUSLINE_SHOW_EMAIL=0 \
     bash -c "'$SCRIPT' < '$BATS_TEST_DIRNAME/fixtures/full.json'"
   [ "$status" -eq 0 ]
   [ "$output" = "" ]
