@@ -38,11 +38,16 @@ setup() {
   [ "$(pct_color 100)" = "$RED" ]
 }
 
-@test "pace_color: green under pace, yellow within ±tolerance, orange over" {
+@test "pace_color: green under pace, yellow within ±tolerance, orange over (default above_color)" {
   [ "$(pace_color 40 50)" = "$GREEN" ]   # 10 under
   [ "$(pace_color 45 50)" = "$YELLOW" ]  # exactly -tol
   [ "$(pace_color 55 50)" = "$YELLOW" ]  # exactly +tol
-  [ "$(pace_color 56 50)" = "$ORANGE" ]  # past +tol
+  [ "$(pace_color 56 50)" = "$ORANGE" ]  # past +tol, no override -> default orange
+}
+
+@test "pace_color: above_color override lets callers pick their own over-pace color" {
+  [ "$(pace_color 56 50 "$RED")" = "$RED" ]
+  [ "$(pace_color 40 50 "$RED")" = "$GREEN" ]  # override only affects the over-pace branch
 }
 
 @test "effort_color: five levels plus a fallback" {
@@ -147,9 +152,22 @@ setup() {
 
 # --- segment builders ------------------------------------------------------------
 
-@test "usage_segment: dim label + severity-colored pace bar" {
+@test "usage_segment: dim label + pace-colored bar, green below pace" {
   STATUSLINE_NOW=1750000000
+  # 30% at 50% elapsed: 20 points under pace -> green (behind-pace hollow tick)
   [ "$(usage_segment 5h 30 1750009000 18000)" = "${DIM}5h${RESET} ${GREEN}███░░▯░░░░${RESET}" ]
+}
+
+@test "usage_segment: yellow when on pace, within ±tolerance" {
+  STATUSLINE_NOW=1750000000
+  # 50% at 50% elapsed: exactly on pace -> yellow
+  [ "$(usage_segment 5h 50 1750009000 18000)" = "${DIM}5h${RESET} ${YELLOW}█████▮░░░░${RESET}" ]
+}
+
+@test "usage_segment: red when over pace (not orange, unlike 7d)" {
+  STATUSLINE_NOW=1750000000
+  # 60% at 50% elapsed: 10 points over tolerance -> red
+  [ "$(usage_segment 5h 60 1750009000 18000)" = "${DIM}5h${RESET} ${RED}█████▮░░░░${RESET}" ]
 }
 
 @test "usage_segment: plain bar without a reset time" {
@@ -192,18 +210,4 @@ setup() {
   mkdir -p "$dir"
   echo '{}' > "$dir/.claude.json"
   [ "$(CLAUDE_CONFIG_DIR="$dir" account_email)" = "" ]
-}
-
-# --- using_default_claude_profile -----------------------------------------------
-
-@test "using_default_claude_profile: true when CLAUDE_CONFIG_DIR is unset" {
-  (unset CLAUDE_CONFIG_DIR; HOME=/fake/home using_default_claude_profile)
-}
-
-@test "using_default_claude_profile: true when CLAUDE_CONFIG_DIR equals \$HOME/.claude" {
-  HOME=/fake/home CLAUDE_CONFIG_DIR=/fake/home/.claude using_default_claude_profile
-}
-
-@test "using_default_claude_profile: false when CLAUDE_CONFIG_DIR points elsewhere" {
-  ! HOME=/fake/home CLAUDE_CONFIG_DIR=/fake/home/.claude-perso using_default_claude_profile
 }

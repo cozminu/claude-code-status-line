@@ -151,14 +151,16 @@ pace_bar() {
 }
 
 # Color by how usage tracks the even-spend pace: green below, yellow on
-# (within ±STATUSLINE_PACE_TOL points), orange above.
+# (within ±STATUSLINE_PACE_TOL points), above_color (default orange) above.
+# Callers pass a distinct above_color so segments sharing this scale (5h red,
+# 7d orange) stay visually distinguishable from each other.
 pace_color() {
-  local pct="$1" elapsed_pct="$2"
+  local pct="$1" elapsed_pct="$2" above_color="${3:-$ORANGE}"
   local diff=$(( pct - elapsed_pct ))
   if [ "$diff" -lt "-$STATUSLINE_PACE_TOL" ]; then
     printf "%s" "$GREEN"
   elif [ "$diff" -gt "$STATUSLINE_PACE_TOL" ]; then
-    printf "%s" "$ORANGE"
+    printf "%s" "$above_color"
   else
     printf "%s" "$YELLOW"
   fi
@@ -206,21 +208,26 @@ gauge_glyph() {
   printf "%s" "${blocks[$idx]}"
 }
 
-# Renders one rate-limit window as a dim-labeled usage bar colored by usage
-# severity (no brackets, no reset countdown). The reset time, when present, is
-# used only to position the pace tick (pace_bar: ▮ at/ahead of pace, ▯ behind)
-# — it is not displayed; without it pace is unknowable and a plain bar renders
-# instead. Prints nothing if the percentage can't be parsed.
+# Renders one rate-limit window as a dim-labeled usage bar (no brackets, no
+# reset countdown). Colored on the pace scale (green below / yellow on /
+# red over the even-spend pace, via pace_color) when a reset time is present;
+# the reset also positions the pace tick (pace_bar: ▮ at/ahead of pace, ▯
+# behind). Without a reset, pace is unknowable, so it falls back to a plain
+# bar colored by usage severity (pct_color). Prints nothing if the percentage
+# can't be parsed.
 usage_segment() {
   local label="$1" pct="$2" reset="$3" window_seconds="$4"
   local pct_int
   pct_int=$(printf '%.0f' "$pct" 2>/dev/null)
   [ -z "$pct_int" ] && return
   local color u_bar
-  color=$(pct_color "$pct_int")
   if [ -n "$reset" ] && [ "$reset" != "null" ]; then
-    u_bar=$(pace_bar "$pct_int" "$(elapsed_pct_of_window "$reset" "$window_seconds")")
+    local elapsed_pct
+    elapsed_pct=$(elapsed_pct_of_window "$reset" "$window_seconds")
+    color=$(pace_color "$pct_int" "$elapsed_pct" "$RED")
+    u_bar=$(pace_bar "$pct_int" "$elapsed_pct")
   else
+    color=$(pct_color "$pct_int")
     u_bar=$(bar "$pct_int")
   fi
   printf '%s%s%s %s%s%s' "$DIM" "$label" "$RESET" "$color" "$u_bar" "$RESET"
@@ -267,13 +274,6 @@ seven_day_segment() {
 account_email() {
   local conf_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
   jq -r '.oauthAccount.emailAddress // ""' "$conf_dir/.claude.json" 2>/dev/null
-}
-
-# True when CLAUDE_CONFIG_DIR points at Claude Code's own default profile dir
-# (unset, or explicitly set to it) -- the case where showing the account
-# email adds no signal since there's only ever one profile in play.
-using_default_claude_profile() {
-  [ "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" = "$HOME/.claude" ]
 }
 
 join_line() {
@@ -405,7 +405,8 @@ main() {
   # API-key billing). The label is a live reset countdown (integer hours/days
   # via reset_countdown) when a reset time is present, falling back to the
   # static period name otherwise.
-  # 5h: always shown, colored by usage severity (green/yellow/red).
+  # 5h: always shown, colored on the pace scale (green/yellow/red) when a
+  # reset time is present, falling back to usage severity otherwise.
   if [ "$STATUSLINE_SHOW_FIVE_HOUR" = 1 ] && [ -n "$five_h_pct" ] && [ "$five_h_pct" != "null" ]; then
     five_h_label="5h"
     if [ -n "$five_h_reset" ] && [ "$five_h_reset" != "null" ]; then
@@ -433,11 +434,9 @@ main() {
   fi
 
   # Line 3: logged-in Claude account email, read from CLAUDE_CONFIG_DIR rather
-  # than the stdin payload (which carries no account/user field). Only shown
-  # on a non-default profile, where knowing which account is active is
-  # actually useful signal.
+  # than the stdin payload (which carries no account/user field).
   line3=()
-  if [ "$STATUSLINE_SHOW_EMAIL" = 1 ] && ! using_default_claude_profile; then
+  if [ "$STATUSLINE_SHOW_EMAIL" = 1 ]; then
     email=$(account_email)
     [ -n "$email" ] && line3+=("${CYAN}${email}${RESET}")
   fi

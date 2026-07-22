@@ -49,7 +49,7 @@ check_golden() {
   check_golden seven-day-on-pace
 }
 
-@test "5h ahead of pace: solid pace tick" {
+@test "5h ahead of pace: solid pace tick, colored red not yellow/orange" {
   check_golden five-hour-ahead
 }
 

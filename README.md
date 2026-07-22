@@ -8,7 +8,7 @@ the script prints up to three ANSI-colored lines:
 ```
 status-line | main ✗ +1~2?1
 Fable 5 | high | 84k | 3h ███░░▯░░░░ | 4d ▄ | $1.23
-you@example.com  # only on a non-default CLAUDE_CONFIG_DIR profile
+you@example.com
 ```
 
 - **Line 1** — project title, git branch with dirty/clean indicator and
@@ -17,10 +17,7 @@ you@example.com  # only on a non-default CLAUDE_CONFIG_DIR profile
   tokens used, 5-hour and 7-day subscription usage, session cost.
 - **Line 3** (optional, on by default) — the logged-in Claude account's
   email, read from `$CLAUDE_CONFIG_DIR/.claude.json` rather than the stdin
-  payload. Only shown when `CLAUDE_CONFIG_DIR` points somewhere other than
-  Claude Code's own default (`~/.claude`) — i.e. only on a non-default
-  profile, where it's actually useful for telling profiles apart at a
-  glance. Disable entirely with `STATUSLINE_SHOW_EMAIL=0`.
+  payload. Disable with `STATUSLINE_SHOW_EMAIL=0`.
 
 The 5h/7d labels are a live reset countdown — integer hours remaining for
 the 5h window, integer days remaining for the 7d window (`3h`, `4d`, ...),
@@ -29,12 +26,16 @@ When the payload has no reset timestamp for a window, the label falls back
 to the static period name (`5h`/`7d`).
 
 The 5h bar carries a *pace tick* marking where usage "should" be if spent
-evenly across the window (solid `▮` at/ahead of pace, hollow `▯` behind).
-The 7d segment is a compact one-cell gauge (`▁`–`█`) colored by pace
-(green under / yellow on / orange over) that expands into a full bar only
-when weekly usage runs genuinely over pace. Segments whose data is missing
-from the payload (no effort, API-key billing without rate limits, not a git
-repo, ...) drop out silently.
+evenly across the window (solid `▮` at/ahead of pace, hollow `▯` behind), and
+is colored by that same pace — green under / yellow on / red over — whenever
+a reset time is available; without one, pace is unknowable and it falls back
+to a plain bar colored by usage severity. The 7d segment is a compact
+one-cell gauge (`▁`–`█`) colored by pace (green under / yellow on / orange
+over) that expands into a full bar only when weekly usage runs genuinely
+over pace. 5h and 7d use the same pace scale but different "over pace"
+colors (red vs. orange) so they stay visually distinct. Segments whose data
+is missing from the payload (no effort, API-key billing without rate limits,
+not a git repo, ...) drop out silently.
 
 ## Requirements
 
@@ -76,7 +77,7 @@ STATUSLINE_SHOW_COST=0
 | `STATUSLINE_BAR_WIDTH` | `10` | Width (cells) of the 5h / expanded-7d bars |
 | `STATUSLINE_PCT_WARN` | `50` | Usage severity threshold: green → yellow |
 | `STATUSLINE_PCT_CRIT` | `80` | Usage severity threshold: yellow → red |
-| `STATUSLINE_PACE_TOL` | `5` | ± percentage points that still count as "on pace" (also the 7d expansion trigger) |
+| `STATUSLINE_PACE_TOL` | `5` | ± percentage points that still count as "on pace" for the 5h/7d bars (also the 7d expansion trigger) |
 | `STATUSLINE_SHOW_TITLE` | `1` | Project title (set any toggle to `0` to hide) |
 | `STATUSLINE_SHOW_GIT` | `1` | Git branch + file counts |
 | `STATUSLINE_SHOW_MODEL` | `1` | Model name |
@@ -85,7 +86,7 @@ STATUSLINE_SHOW_COST=0
 | `STATUSLINE_SHOW_FIVE_HOUR` | `1` | 5-hour usage bar |
 | `STATUSLINE_SHOW_SEVEN_DAY` | `1` | 7-day pace marker |
 | `STATUSLINE_SHOW_COST` | `1` | Session cost |
-| `STATUSLINE_SHOW_EMAIL` | `1` | Logged-in account email (line 3), shown only on a non-default `CLAUDE_CONFIG_DIR` profile |
+| `STATUSLINE_SHOW_EMAIL` | `1` | Logged-in account email (line 3) |
 | `STATUSLINE_NOW` | *(unset)* | Test-only: pin the clock (unix seconds) for deterministic pace math |
 | `STATUSLINE_CONFIG` | *(see above)* | Test-only: alternate config file path |
 

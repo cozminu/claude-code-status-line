@@ -100,22 +100,22 @@ EOF
   [[ "$(CLAUDE_CONFIG_DIR="$dir" STATUSLINE_SHOW_EMAIL=0 render_full | strip_ansi)" != *"test@example.com"* ]]
 }
 
-@test "default profile: email hidden even with an account file, when CLAUDE_CONFIG_DIR is unset" {
+@test "default profile: email still shown when CLAUDE_CONFIG_DIR is unset" {
   local home="$BATS_TEST_TMPDIR/fake-home"
   mkdir -p "$home/.claude"
   echo '{"oauthAccount":{"emailAddress":"test@example.com"}}' > "$home/.claude/.claude.json"
   local out
   out=$(unset CLAUDE_CONFIG_DIR; HOME="$home" render_full | strip_ansi)
-  [[ "$out" != *"test@example.com"* ]]
+  [[ "$out" == *"test@example.com"* ]]
 }
 
-@test "default profile: email hidden even with an account file, when CLAUDE_CONFIG_DIR equals \$HOME/.claude" {
+@test "default profile: email still shown when CLAUDE_CONFIG_DIR equals \$HOME/.claude" {
   local home="$BATS_TEST_TMPDIR/fake-home2"
   mkdir -p "$home/.claude"
   echo '{"oauthAccount":{"emailAddress":"test@example.com"}}' > "$home/.claude/.claude.json"
   local out
   out=$(HOME="$home" CLAUDE_CONFIG_DIR="$home/.claude" render_full | strip_ansi)
-  [[ "$out" != *"test@example.com"* ]]
+  [[ "$out" == *"test@example.com"* ]]
 }
 
 @test "no logged-in account: email toggle on but no 3rd line renders" {
