@@ -7,7 +7,7 @@ prompt render; the script prints up to three ANSI-colored lines:
 
 ```
 status-line | main ✗ +1~2?1
-Fable 5 | high | 84k | 3h ███░░▯░░░░ | 4d ▄ | $1.23
+Fable 5 | high | 84k | 3h ███▒▒░░░░░ | 4d ▄ | $1.23
 you@example.com
 ```
 
@@ -25,9 +25,9 @@ rounded up and shown as `<1h`/`<1d` once less than a whole unit remains.
 When the payload has no reset timestamp for a window, the label falls back
 to the static period name (`5h`/`7d`).
 
-The 5h bar carries a *pace tick* marking where usage "should" be if spent
-evenly across the window (solid `▮` at/ahead of pace, hollow `▯` behind), and
-is colored by that same pace — green under / yellow on / red over — whenever
+The 5h bar shades up to three regions based on pace — solid `█` for usage
+within pace, a gap shade for the delta (`▓` denser when over pace, `▒` lighter
+when under pace), and `░` for untouched — and is colored by that same pace — green under / yellow on / red over — whenever
 a reset time is available; without one, pace is unknowable and it falls back
 to a plain bar colored by usage severity. The 7d segment is a compact
 one-cell gauge (`▁`–`█`) colored by pace (green under / yellow on / orange

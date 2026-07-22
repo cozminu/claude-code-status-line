@@ -154,8 +154,8 @@ gauge_glyph() {
 # Renders one rate-limit window as a dim-labeled usage bar (no brackets, no
 # reset countdown). Colored on the pace scale (green below / yellow on /
 # red over the even-spend pace, via pace_color) when a reset time is present;
-# the reset also positions the pace tick (pace_bar: ▮ at/ahead of pace, ▯
-# behind). Without a reset, pace is unknowable, so it falls back to a plain
+# the reset also positions the pace regions via pace_bar (solid █ used-within-pace,
+# gap shade ▓/▒ for the delta, ░ untouched). Without a reset, pace is unknowable, so it falls back to a plain
 # bar colored by usage severity (pct_color). Prints nothing if the percentage
 # can't be parsed.
 usage_segment() {
