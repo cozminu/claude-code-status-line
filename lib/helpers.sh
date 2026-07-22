@@ -63,25 +63,29 @@ bar() {
   printf "%s" "$out"
 }
 
-# Usage bar with a pace tick marking where usage "should" be if evenly spent
-# across the elapsed portion of the window. The tick overrides whatever glyph
-# (filled/empty) would otherwise occupy that slot, and its shape encodes pace:
-# solid ▮ when usage is at or ahead of pace, hollow ▯ when usage is behind it.
+# Usage bar shaded across up to three regions instead of a flat fill: solid █
+# for cells used within pace, a gap shade for the delta between actual usage
+# and the pace point (▓ denser when usage has run past pace - overspend - ▒
+# lighter when pace is ahead of usage - unused slack), and ░ for cells beyond
+# both. Zero-width gap (pct == elapsed_pct) renders as plain solid-then-empty.
 pace_bar() {
   local pct="$1" elapsed_pct="$2" width="$STATUSLINE_BAR_WIDTH"
   local filled=$(( pct * width / 100 ))
   [ "$filled" -gt "$width" ] && filled="$width"
-  local tick=$(( elapsed_pct * width / 100 ))
-  [ "$tick" -ge "$width" ] && tick=$(( width - 1 ))
-  [ "$tick" -lt 0 ] && tick=0
-  local tick_glyph="▯"
-  [ "$pct" -ge "$elapsed_pct" ] && tick_glyph="▮"
+  [ "$filled" -lt 0 ] && filled=0
+  local paced=$(( elapsed_pct * width / 100 ))
+  [ "$paced" -gt "$width" ] && paced="$width"
+  [ "$paced" -lt 0 ] && paced=0
+  local lo="$filled" hi="$paced"
+  [ "$paced" -lt "$filled" ] && lo="$paced" && hi="$filled"
+  local gap_glyph="▒"
+  [ "$filled" -gt "$paced" ] && gap_glyph="▓"
   local out="" i
   for (( i = 0; i < width; i++ )); do
-    if [ "$i" -eq "$tick" ]; then
-      out+="$tick_glyph"
-    elif [ "$i" -lt "$filled" ]; then
+    if [ "$i" -lt "$lo" ]; then
       out+="█"
+    elif [ "$i" -lt "$hi" ]; then
+      out+="$gap_glyph"
     else
       out+="░"
     fi

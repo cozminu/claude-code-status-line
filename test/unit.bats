@@ -82,18 +82,22 @@ setup() {
   [ "$(bar 130)" = "██████████" ]
 }
 
-@test "pace_bar: hollow tick when behind pace, at the elapsed position" {
-  [ "$(pace_bar 30 50)" = "███░░▯░░░░" ]
+@test "pace_bar: lighter gap shade when pace is ahead of usage (behind pace)" {
+  [ "$(pace_bar 30 50)" = "███▒▒░░░░░" ]
 }
 
-@test "pace_bar: solid tick when at or ahead of pace" {
-  [ "$(pace_bar 60 50)" = "█████▮░░░░" ]
-  [ "$(pace_bar 50 50)" = "█████▮░░░░" ]
+@test "pace_bar: denser gap shade when usage has run past pace (overspend)" {
+  [ "$(pace_bar 60 50)" = "█████▓░░░░" ]
 }
 
-@test "pace_bar: tick clamps inside the bar at both ends" {
-  [ "$(pace_bar 100 100)" = "█████████▮" ]
-  [ "$(pace_bar 10 0)" = "▮░░░░░░░░░" ]
+@test "pace_bar: no gap when exactly on pace" {
+  [ "$(pace_bar 50 50)" = "█████░░░░░" ]
+}
+
+@test "pace_bar: clamps at both extremes" {
+  [ "$(pace_bar 100 100)" = "██████████" ]
+  [ "$(pace_bar 10 0)" = "▓░░░░░░░░░" ]
+  [ "$(pace_bar 0 100)" = "▒▒▒▒▒▒▒▒▒▒" ]
 }
 
 @test "gauge_glyph: maps 0-100% onto 8 block heights, clamped" {
@@ -155,20 +159,20 @@ setup() {
 
 @test "usage_segment: dim label + pace-colored bar, green below pace" {
   STATUSLINE_NOW=1750000000
-  # 30% at 50% elapsed: 20 points under pace -> green (behind-pace hollow tick)
-  [ "$(usage_segment 5h 30 1750009000 18000)" = "${DIM}5h${RESET} ${GREEN}███░░▯░░░░${RESET}" ]
+  # 30% at 50% elapsed: 20 points under pace -> green (behind-pace lighter gap)
+  [ "$(usage_segment 5h 30 1750009000 18000)" = "${DIM}5h${RESET} ${GREEN}███▒▒░░░░░${RESET}" ]
 }
 
 @test "usage_segment: yellow when on pace, within ±tolerance" {
   STATUSLINE_NOW=1750000000
   # 50% at 50% elapsed: exactly on pace -> yellow
-  [ "$(usage_segment 5h 50 1750009000 18000)" = "${DIM}5h${RESET} ${YELLOW}█████▮░░░░${RESET}" ]
+  [ "$(usage_segment 5h 50 1750009000 18000)" = "${DIM}5h${RESET} ${YELLOW}█████░░░░░${RESET}" ]
 }
 
 @test "usage_segment: red when over pace (not orange, unlike 7d)" {
   STATUSLINE_NOW=1750000000
   # 60% at 50% elapsed: 10 points over tolerance -> red
-  [ "$(usage_segment 5h 60 1750009000 18000)" = "${DIM}5h${RESET} ${RED}█████▮░░░░${RESET}" ]
+  [ "$(usage_segment 5h 60 1750009000 18000)" = "${DIM}5h${RESET} ${RED}█████▓░░░░${RESET}" ]
 }
 
 @test "usage_segment: plain bar without a reset time" {
@@ -186,7 +190,7 @@ setup() {
   # 52% at 50% elapsed: within tolerance, compact yellow gauge
   [ "$(seven_day_segment 7d 52 1750302400 604800)" = "${DIM}7d${RESET} ${YELLOW}▅${RESET}" ]
   # 60% at 50% elapsed: over pace, expands to an orange pace bar
-  [ "$(seven_day_segment 7d 60 1750302400 604800)" = "${DIM}7d${RESET} ${ORANGE}█████▮░░░░${RESET}" ]
+  [ "$(seven_day_segment 7d 60 1750302400 604800)" = "${DIM}7d${RESET} ${ORANGE}█████▓░░░░${RESET}" ]
 }
 
 @test "seven_day_segment: no reset time falls back to severity-colored compact glyph" {

@@ -39,16 +39,16 @@ EOF
 @test "config file overrides default: bar width" {
   echo 'STATUSLINE_BAR_WIDTH=4' > "$STATUSLINE_CONFIG"
   run bash -c "'$SCRIPT' < '$BATS_TEST_DIRNAME/fixtures/full.json' | sed \$'s/\033\\[[0-9;]*m//g'"
-  # 5h: 30% of 4 cells -> 1 filled, tick at cell 2 (elapsed 50%), hollow (behind)
+  # 5h: 30% of 4 cells -> 1 filled, 1 light gap cell (paced=2, behind pace)
   # label is a live countdown: full.json's five_hour reset is 2.5h out -> "3h"
-  [[ "${lines[1]}" == *"3h █░▯░"* ]]
+  [[ "${lines[1]}" == *"3h █▒░░"* ]]
 }
 
 @test "environment overrides config file" {
   echo 'STATUSLINE_BAR_WIDTH=4' > "$STATUSLINE_CONFIG"
   run bash -c "STATUSLINE_BAR_WIDTH=6 '$SCRIPT' < '$BATS_TEST_DIRNAME/fixtures/full.json' | sed \$'s/\033\\[[0-9;]*m//g'"
-  # 30% of 6 cells -> 1 filled, tick at cell 3, hollow
-  [[ "${lines[1]}" == *"3h █░░▯░░"* ]]
+  # 30% of 6 cells -> 1 filled, 2 light gap cells (paced=3, behind pace)
+  [[ "${lines[1]}" == *"3h █▒▒░░░"* ]]
 }
 
 @test "warn threshold is tunable: 42% context turns yellow when warn=30" {
