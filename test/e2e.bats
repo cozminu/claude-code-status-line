@@ -15,6 +15,8 @@ setup() {
   export STATUSLINE_CONFIG="$BATS_TEST_TMPDIR/no-such.conf"
   # Hermetic: a real logged-in account must not leak into golden comparisons.
   export CLAUDE_CONFIG_DIR="$BATS_TEST_TMPDIR/no-such-claude-dir"
+  # Hermetic: a real segments.d plugin directory must not leak into golden comparisons.
+  export STATUSLINE_SEGMENTS_DIR="$BATS_TEST_TMPDIR/no-such-segments-dir"
 }
 
 check_golden() {

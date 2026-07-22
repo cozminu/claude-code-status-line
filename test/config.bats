@@ -9,6 +9,8 @@ setup() {
   export STATUSLINE_CONFIG="$BATS_TEST_TMPDIR/statusline.conf"
   # Hermetic: never read a real logged-in account unless a test points here.
   export CLAUDE_CONFIG_DIR="$BATS_TEST_TMPDIR/no-such-claude-dir"
+  # Hermetic: never load a real segments.d plugin directory in these tests.
+  export STATUSLINE_SEGMENTS_DIR="$BATS_TEST_TMPDIR/no-such-segments-dir"
   export STATUSLINE_NOW="$STATUSLINE_EPOCH"
 }
 

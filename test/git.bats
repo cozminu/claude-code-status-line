@@ -15,6 +15,8 @@ setup() {
   export STATUSLINE_CONFIG="$BATS_TEST_TMPDIR/no-such.conf"
   # Hermetic: a real logged-in account must not leak into expected output.
   export CLAUDE_CONFIG_DIR="$BATS_TEST_TMPDIR/no-such-claude-dir"
+  # Hermetic: a real segments.d plugin directory must not leak into expected output.
+  export STATUSLINE_SEGMENTS_DIR="$BATS_TEST_TMPDIR/no-such-segments-dir"
   # Isolate from the user's git config so status output is deterministic.
   export GIT_CONFIG_GLOBAL=/dev/null
   export GIT_CONFIG_SYSTEM=/dev/null

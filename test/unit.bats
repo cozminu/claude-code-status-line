@@ -4,6 +4,7 @@
 
 setup() {
   export STATUSLINE_CONFIG="$BATS_TEST_TMPDIR/no-such.conf"
+  export STATUSLINE_SEGMENTS_DIR="$BATS_TEST_TMPDIR/no-such-segments-dir"
   source "$BATS_TEST_DIRNAME/../statusline-command.sh"
   load_config
 }
