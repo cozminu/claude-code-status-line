@@ -7,7 +7,7 @@ prompt render; the script prints up to three ANSI-colored lines:
 
 ```
 status-line | main ✗ +1~2?1
-Fable 5 | high | 84k | 3h ███▒▒░░░░░ | 4d ▄ | $1.23
+Fable 5 | high | 84k | 3h ███░░▯░░░░ | 4d ▄ | $1.23
 you@example.com
 ```
 
@@ -15,9 +15,9 @@ you@example.com
   staged (`+N`) / modified (`~N`) / untracked (`?N`) counts.
 - **Line 2** — model name (colored by family), reasoning effort, context
   tokens used, 5-hour and 7-day subscription usage, session cost.
-- **Line 3** (optional, on by default) — the logged-in Claude account's
+- **Line 3** (optional, off by default) — the logged-in Claude account's
   email, read from `$CLAUDE_CONFIG_DIR/.claude.json` rather than the stdin
-  payload. Disable with `STATUSLINE_SHOW_EMAIL=0`.
+  payload. Enable with `STATUSLINE_SHOW_EMAIL=1`.
 
 The 5h/7d labels are a live reset countdown — integer hours remaining for
 the 5h window, integer days remaining for the 7d window (`3h`, `4d`, ...),
@@ -25,9 +25,9 @@ rounded up and shown as `<1h`/`<1d` once less than a whole unit remains.
 When the payload has no reset timestamp for a window, the label falls back
 to the static period name (`5h`/`7d`).
 
-The 5h bar shades up to three regions based on pace — solid `█` for usage
-within pace, a gap shade for the delta (`▓` denser when over pace, `▒` lighter
-when under pace), and `░` for untouched — and is colored by that same pace — green under / yellow on / red over — whenever
+The 5h bar carries a *pace tick* marking where usage "should" be if spent
+evenly across the window (solid `▮` at/ahead of pace, hollow `▯` behind), and
+is colored by that same pace — green under / yellow on / red over — whenever
 a reset time is available; without one, pace is unknowable and it falls back
 to a plain bar colored by usage severity. The 7d segment is a compact
 one-cell gauge (`▁`–`█`) colored by pace (green under / yellow on / orange
@@ -107,7 +107,7 @@ STATUSLINE_SHOW_COST=0
 | `STATUSLINE_SHOW_FIVE_HOUR` | `1` | 5-hour usage bar |
 | `STATUSLINE_SHOW_SEVEN_DAY` | `1` | 7-day pace marker |
 | `STATUSLINE_SHOW_COST` | `1` | Session cost |
-| `STATUSLINE_SHOW_EMAIL` | `1` | Logged-in account email (line 3) |
+| `STATUSLINE_SHOW_EMAIL` | `0` | Logged-in account email (line 3) |
 | `STATUSLINE_SEGMENTS_DIR` | `${XDG_CONFIG_HOME:-~/.config}/claude-statusline/segments.d` | Directory of custom segment scripts, sourced on every render (see Custom segments) |
 | `STATUSLINE_LINE1_SEGMENTS` | `title git` | Line 1 segment names and order |
 | `STATUSLINE_LINE2_SEGMENTS` | `model effort context five_hour seven_day cost` | Line 2 segment names and order |

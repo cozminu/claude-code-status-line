@@ -77,6 +77,7 @@ check_golden() {
 
 @test "logged-in account: 3rd line renders the email from CLAUDE_CONFIG_DIR" {
   CLAUDE_CONFIG_DIR="$BATS_TEST_DIRNAME/fixtures/fake-claude-config" \
+    STATUSLINE_SHOW_EMAIL=1 \
     STATUSLINE_NOW="$STATUSLINE_EPOCH" "$SCRIPT" \
     < "$BATS_TEST_DIRNAME/fixtures/full.json" \
     > "$BATS_TEST_TMPDIR/email.out"

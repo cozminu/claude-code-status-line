@@ -45,6 +45,6 @@ load_config() {
   : "${STATUSLINE_SHOW_FIVE_HOUR:=1}"
   : "${STATUSLINE_SHOW_SEVEN_DAY:=1}"
   : "${STATUSLINE_SHOW_COST:=1}"
-  : "${STATUSLINE_SHOW_EMAIL:=1}"       # 3rd line: logged-in account email
+  : "${STATUSLINE_SHOW_EMAIL:=0}"       # 3rd line: logged-in account email
   : "${STATUSLINE_SEGMENTS_DIR:=${XDG_CONFIG_HOME:-$HOME/.config}/claude-statusline/segments.d}"
 }
