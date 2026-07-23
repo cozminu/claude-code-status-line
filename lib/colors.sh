@@ -3,6 +3,8 @@
 
 RESET=$'\033[0m'
 DIM=$'\033[2m'
+REVERSE=$'\033[7m'
+UNREVERSE=$'\033[27m'
 CYAN=$'\033[36m'
 MAGENTA=$'\033[35m'
 GREEN=$'\033[32m'

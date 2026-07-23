@@ -67,6 +67,11 @@ bar() {
 # across the elapsed portion of the window. The tick overrides whatever glyph
 # (filled/empty) would otherwise occupy that slot, and its shape encodes pace:
 # solid ▮ when usage is at or ahead of pace, hollow ▯ when usage is behind it.
+# The whole bar is printed in one color by the caller, which buries the tick
+# when it lands inside a run of same-colored fill (the common case once
+# usage is well ahead of pace) -- so the tick cell is wrapped in reverse
+# video, punching a visible notch out of the bar regardless of which color
+# or position it falls on.
 pace_bar() {
   local pct="$1" elapsed_pct="$2" width="$STATUSLINE_BAR_WIDTH"
   local filled=$(( pct * width / 100 ))
@@ -79,7 +84,7 @@ pace_bar() {
   local out="" i
   for (( i = 0; i < width; i++ )); do
     if [ "$i" -eq "$tick" ]; then
-      out+="$tick_glyph"
+      out+="${REVERSE}${tick_glyph}${UNREVERSE}"
     elif [ "$i" -lt "$filled" ]; then
       out+="█"
     else
