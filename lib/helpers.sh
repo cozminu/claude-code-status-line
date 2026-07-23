@@ -63,30 +63,29 @@ bar() {
   printf "%s" "$out"
 }
 
-# Usage bar with a pace tick marking where usage "should" be if evenly spent
-# across the elapsed portion of the window. The tick overrides whatever glyph
-# (filled/empty) would otherwise occupy that slot, and its shape encodes pace:
-# solid ▮ when usage is at or ahead of pace, hollow ▯ when usage is behind it.
-# The whole bar is printed in one color by the caller, which buries the tick
-# when it lands inside a run of same-colored fill (the common case once
-# usage is well ahead of pace) -- so the tick cell is wrapped in reverse
-# video, punching a visible notch out of the bar regardless of which color
-# or position it falls on.
+# Usage bar shaded across up to three regions instead of a flat fill: solid █
+# for cells used within pace, a gap shade for the delta between actual usage
+# and the pace point (▓ denser when usage has run past pace - overspend - ▒
+# lighter when pace is ahead of usage - unused slack), and ░ for cells beyond
+# both. Zero-width gap (pct == elapsed_pct) renders as plain solid-then-empty.
 pace_bar() {
   local pct="$1" elapsed_pct="$2" width="$STATUSLINE_BAR_WIDTH"
   local filled=$(( pct * width / 100 ))
   [ "$filled" -gt "$width" ] && filled="$width"
-  local tick=$(( elapsed_pct * width / 100 ))
-  [ "$tick" -ge "$width" ] && tick=$(( width - 1 ))
-  [ "$tick" -lt 0 ] && tick=0
-  local tick_glyph="▯"
-  [ "$pct" -ge "$elapsed_pct" ] && tick_glyph="▮"
+  [ "$filled" -lt 0 ] && filled=0
+  local paced=$(( elapsed_pct * width / 100 ))
+  [ "$paced" -gt "$width" ] && paced="$width"
+  [ "$paced" -lt 0 ] && paced=0
+  local lo="$filled" hi="$paced"
+  [ "$paced" -lt "$filled" ] && lo="$paced" && hi="$filled"
+  local gap_glyph="▒"
+  [ "$filled" -gt "$paced" ] && gap_glyph="▓"
   local out="" i
   for (( i = 0; i < width; i++ )); do
-    if [ "$i" -eq "$tick" ]; then
-      out+="${REVERSE}${tick_glyph}${UNREVERSE}"
-    elif [ "$i" -lt "$filled" ]; then
+    if [ "$i" -lt "$lo" ]; then
       out+="█"
+    elif [ "$i" -lt "$hi" ]; then
+      out+="$gap_glyph"
     else
       out+="░"
     fi
@@ -155,8 +154,8 @@ gauge_glyph() {
 # Renders one rate-limit window as a dim-labeled usage bar (no brackets, no
 # reset countdown). Colored on the pace scale (green below / yellow on /
 # red over the even-spend pace, via pace_color) when a reset time is present;
-# the reset also positions the pace tick (pace_bar: ▮ at/ahead of pace, ▯
-# behind). Without a reset, pace is unknowable, so it falls back to a plain
+# the reset also positions the pace regions via pace_bar (solid █ used-within-pace,
+# gap shade ▓/▒ for the delta, ░ untouched). Without a reset, pace is unknowable, so it falls back to a plain
 # bar colored by usage severity (pct_color). Prints nothing if the percentage
 # can't be parsed.
 usage_segment() {
