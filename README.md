@@ -21,8 +21,8 @@ you@example.com
 
 The 5h/7d labels are a live reset countdown, rounded up to the nearest
 quarter-unit and shown as a mixed number with fraction glyphs (`2½h`, `3½d`,
-`¼d`, ...) — whole hours/days for the 5h/7d window respectively, `<1` once
-the reset has arrived. When the payload has no reset timestamp for a window,
+`¼d`, ...) — whole hours/days for the 5h/7d window respectively, `<1h`/`<1d`
+once the reset has arrived. When the payload has no reset timestamp for a window,
 the label falls back to the static period name (`5h`/`7d`).
 
 The 5h bar carries a *pace tick* marking where usage "should" be if spent
