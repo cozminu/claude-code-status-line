@@ -40,8 +40,8 @@ EOF
   echo 'STATUSLINE_BAR_WIDTH=4' > "$STATUSLINE_CONFIG"
   run bash -c "'$SCRIPT' < '$BATS_TEST_DIRNAME/fixtures/full.json' | sed \$'s/\033\\[[0-9;]*m//g'"
   # 5h: 30% of 4 cells -> 1 filled, tick at cell 2 (elapsed 50%), hollow (behind)
-  # label is a live countdown: full.json's five_hour reset is 2.5h out -> "3h"
-  [[ "${lines[1]}" == *"3h █░▯░"* ]]
+  # label is a live countdown: full.json's five_hour reset is 2.5h out -> "2½h"
+  [[ "${lines[1]}" == *"2½h █░▯░"* ]]
 }
 
 @test "config file overrides default: seven-day bar width" {
@@ -56,7 +56,7 @@ EOF
   echo 'STATUSLINE_BAR_WIDTH=4' > "$STATUSLINE_CONFIG"
   run bash -c "STATUSLINE_BAR_WIDTH=6 '$SCRIPT' < '$BATS_TEST_DIRNAME/fixtures/full.json' | sed \$'s/\033\\[[0-9;]*m//g'"
   # 30% of 6 cells -> 1 filled, tick at cell 3, hollow
-  [[ "${lines[1]}" == *"3h █░░▯░░"* ]]
+  [[ "${lines[1]}" == *"2½h █░░▯░░"* ]]
 }
 
 @test "warn threshold is tunable: 42% context turns yellow when warn=30" {
@@ -72,15 +72,15 @@ EOF
   echo 'STATUSLINE_PACE_TOL=15' > "$STATUSLINE_CONFIG"
   local YELLOW=$'\033[33m'
   run render_full
-  [[ "${lines[1]}" == *"4d"*"${YELLOW}▅"* ]]
-  [[ "${lines[1]}" != *"4d"*"█████"* ]]
+  [[ "${lines[1]}" == *"3½d"*"${YELLOW}▅"* ]]
+  [[ "${lines[1]}" != *"3½d"*"█████"* ]]
 }
 
 @test "each line-2 toggle hides exactly its segment" {
   local plain toggles=(MODEL EFFORT CONTEXT FIVE_HOUR SEVEN_DAY COST)
-  # full.json's reset timestamps -> live countdown labels "3h"/"4d" (not the
+  # full.json's reset timestamps -> live countdown labels "2½h"/"3½d" (not the
   # static "5h"/"7d") since STATUSLINE_NOW is pinned in setup().
-  local markers=("Fable 5" "high" "84k" "3h" "4d" '$1.23')
+  local markers=("Fable 5" "high" "84k" "2½h" "3½d" '$1.23')
   local i t
   for i in "${!toggles[@]}"; do
     t="${toggles[$i]}"

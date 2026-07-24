@@ -7,7 +7,7 @@ prompt render; the script prints up to three ANSI-colored lines:
 
 ```
 status-line | main ✗ +1~2?1
-Fable 5 | high | 84k | 3h ███░░▯░░░░ | 4d ▄ | $1.23
+Fable 5 | high | 84k | 2½h ███░░▯░░░░ | 3½d ▄ | $1.23
 you@example.com
 ```
 
@@ -19,11 +19,11 @@ you@example.com
   email, read from `$CLAUDE_CONFIG_DIR/.claude.json` rather than the stdin
   payload. Enable with `STATUSLINE_SHOW_EMAIL=1`.
 
-The 5h/7d labels are a live reset countdown — integer hours remaining for
-the 5h window, integer days remaining for the 7d window (`3h`, `4d`, ...),
-rounded up and shown as `<1h`/`<1d` once less than a whole unit remains.
-When the payload has no reset timestamp for a window, the label falls back
-to the static period name (`5h`/`7d`).
+The 5h/7d labels are a live reset countdown, rounded up to the nearest
+quarter-unit and shown as a mixed number with fraction glyphs (`2½h`, `3½d`,
+`¼d`, ...) — whole hours/days for the 5h/7d window respectively, `<1` once
+the reset has arrived. When the payload has no reset timestamp for a window,
+the label falls back to the static period name (`5h`/`7d`).
 
 The 5h bar carries a *pace tick* marking where usage "should" be if spent
 evenly across the window (solid `▮` at/ahead of pace, hollow `▯` behind), and
@@ -95,7 +95,8 @@ STATUSLINE_SHOW_COST=0
 
 | Variable | Default | Effect |
 |---|---|---|
-| `STATUSLINE_BAR_WIDTH` | `10` | Width (cells) of the 5h / expanded-7d bars |
+| `STATUSLINE_BAR_WIDTH` | `10` | Width (cells) of the 5h bar |
+| `STATUSLINE_SEVEN_DAY_BAR_WIDTH` | `14` | Width (cells) of the expanded 7d bar |
 | `STATUSLINE_PCT_WARN` | `50` | Usage severity threshold: green → yellow |
 | `STATUSLINE_PCT_CRIT` | `80` | Usage severity threshold: yellow → red |
 | `STATUSLINE_PACE_TOL` | `5` | ± percentage points that still count as "on pace" for the 5h/7d bars (also the 7d expansion trigger) |
