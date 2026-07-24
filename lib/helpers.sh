@@ -119,21 +119,40 @@ elapsed_pct_of_window() {
 }
 
 # Integer ceiling of time remaining until `reset` (unix seconds), in units of
-# `unit_seconds` (3600 for hours, 86400 for days). Remaining is clamped to
-# >= 0 first. Prints "<1" when less than one whole unit remains (including an
-# already-past reset), so a stale/overdue reset never reads as a bare "0".
-# The clock is injectable via STATUSLINE_NOW, like elapsed_pct_of_window.
+# `unit_seconds` (3600 for hours, 86400 for days), rounded up to the nearest
+# quarter-unit and formatted as a mixed number with Unicode fraction glyphs
+# (¼ ½ ¾). Remaining is clamped to >= 0 first. Prints "<1" only when the
+# reset has arrived or passed (remaining == 0) -- any remaining time above
+# zero rounds up to at least a quarter-unit. The clock is injectable via
+# STATUSLINE_NOW, like elapsed_pct_of_window.
 reset_countdown() {
   local reset="$1" unit_seconds="$2"
-  local now remaining units
+  local now remaining quarter_seconds quarters whole frac
   now=${STATUSLINE_NOW:-$(date +%s)}
   remaining=$(( reset - now ))
   [ "$remaining" -lt 0 ] && remaining=0
-  units=$(( (remaining + unit_seconds - 1) / unit_seconds ))
-  if [ "$units" -lt 1 ]; then
+  if [ "$remaining" -eq 0 ]; then
     printf '<1'
+    return
+  fi
+  quarter_seconds=$(( unit_seconds / 4 ))
+  quarters=$(( (remaining + quarter_seconds - 1) / quarter_seconds ))
+  whole=$(( quarters / 4 ))
+  frac=$(( quarters % 4 ))
+  if [ "$frac" -eq 0 ]; then
+    printf '%d' "$whole"
+    return
+  fi
+  local glyph
+  case "$frac" in
+    1) glyph="¼" ;;
+    2) glyph="½" ;;
+    3) glyph="¾" ;;
+  esac
+  if [ "$whole" -eq 0 ]; then
+    printf '%s' "$glyph"
   else
-    printf '%d' "$units"
+    printf '%d%s' "$whole" "$glyph"
   fi
 }
 

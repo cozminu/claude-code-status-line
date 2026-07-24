@@ -122,9 +122,9 @@ setup() {
   [ "$(elapsed_pct_of_window 1750100000 18000)" = "0" ]
 }
 
-@test "reset_countdown: ceils partial units up" {
+@test "reset_countdown: ceils to the nearest quarter-unit" {
   STATUSLINE_NOW=1750000000
-  [ "$(reset_countdown 1750009000 3600)" = "3" ]   # 2.5h away -> 3
+  [ "$(reset_countdown 1750009000 3600)" = "2½" ]   # 2.5h away, exact quarter -> 2½
 }
 
 @test "reset_countdown: exact multiple of the unit does not round up" {
@@ -138,9 +138,21 @@ setup() {
   [ "$(reset_countdown 1749999999 3600)" = "<1" ]  # reset already passed
 }
 
+@test "reset_countdown: bare fraction glyphs when under one whole unit" {
+  STATUSLINE_NOW=1750000000
+  [ "$(reset_countdown 1750000800 3600)" = "¼" ]   # 800s away, 1 quarter (900s) -> ¼
+  [ "$(reset_countdown 1750001000 3600)" = "½" ]   # 1000s away, 2 quarters -> ½
+  [ "$(reset_countdown 1750002000 3600)" = "¾" ]   # 2000s away, 3 quarters -> ¾
+}
+
+@test "reset_countdown: whole-plus-fraction glyphs" {
+  STATUSLINE_NOW=1750000000
+  [ "$(reset_countdown 1750003700 3600)" = "1¼" ]  # 3700s away: 1h + 1 quarter -> 1¼
+}
+
 @test "reset_countdown: works in day-sized units" {
   STATUSLINE_NOW=1750000000
-  [ "$(reset_countdown 1750302400 86400)" = "4" ]  # 3.5d away -> 4
+  [ "$(reset_countdown 1750302400 86400)" = "3½" ]  # 3.5d away, exact quarter -> 3½
 }
 
 # --- join_line -------------------------------------------------------------------
