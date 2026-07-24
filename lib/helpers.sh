@@ -52,7 +52,7 @@ pct_color() {
 }
 
 bar() {
-  local pct="$1" width="$STATUSLINE_BAR_WIDTH"
+  local pct="$1" width="$2"
   local filled=$(( pct * width / 100 ))
   [ "$filled" -gt "$width" ] && filled="$width"
   [ "$filled" -lt 0 ] && filled=0
@@ -68,7 +68,7 @@ bar() {
 # (filled/empty) would otherwise occupy that slot, and its shape encodes pace:
 # solid ▮ when usage is at or ahead of pace, hollow ▯ when usage is behind it.
 pace_bar() {
-  local pct="$1" elapsed_pct="$2" width="$STATUSLINE_BAR_WIDTH"
+  local pct="$1" elapsed_pct="$2" width="$3"
   local filled=$(( pct * width / 100 ))
   [ "$filled" -gt "$width" ] && filled="$width"
   local tick=$(( elapsed_pct * width / 100 ))
@@ -183,10 +183,10 @@ usage_segment() {
     local elapsed_pct
     elapsed_pct=$(elapsed_pct_of_window "$reset" "$window_seconds")
     color=$(pace_color "$pct_int" "$elapsed_pct" "$RED")
-    u_bar=$(pace_bar "$pct_int" "$elapsed_pct")
+    u_bar=$(pace_bar "$pct_int" "$elapsed_pct" "$STATUSLINE_BAR_WIDTH")
   else
     color=$(pct_color "$pct_int")
-    u_bar=$(bar "$pct_int")
+    u_bar=$(bar "$pct_int" "$STATUSLINE_BAR_WIDTH")
   fi
   printf '%s%s%s %s%s%s' "$DIM" "$label" "$RESET" "$color" "$u_bar" "$RESET"
 }
@@ -212,7 +212,7 @@ seven_day_segment() {
     # Expand to a full bar only when genuinely over pace (past the tolerance
     # band, i.e. where pace_color turns orange); on/under pace stays compact.
     if [ "$(( pct_int - elapsed_pct ))" -gt "$STATUSLINE_PACE_TOL" ]; then
-      glyph_or_bar=$(pace_bar "$pct_int" "$elapsed_pct")
+      glyph_or_bar=$(pace_bar "$pct_int" "$elapsed_pct" "$STATUSLINE_SEVEN_DAY_BAR_WIDTH")
     else
       glyph_or_bar=$(gauge_glyph "$pct_int")
     fi

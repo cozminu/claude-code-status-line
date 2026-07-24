@@ -8,7 +8,8 @@
 # lib/segments.sh + segments/*.sh + plugin file has registered — see
 # finalize_segment_order() in lib/main.sh. They're still listed here so
 # load_config's env-wins-over-file snapshot/reassert applies to them too.
-STATUSLINE_CONFIG_VARS="STATUSLINE_BAR_WIDTH STATUSLINE_PCT_WARN
+STATUSLINE_CONFIG_VARS="STATUSLINE_BAR_WIDTH STATUSLINE_SEVEN_DAY_BAR_WIDTH
+  STATUSLINE_PCT_WARN
   STATUSLINE_PCT_CRIT STATUSLINE_PACE_TOL STATUSLINE_SHOW_TITLE
   STATUSLINE_SHOW_GIT STATUSLINE_SHOW_MODEL STATUSLINE_SHOW_EFFORT
   STATUSLINE_SHOW_CONTEXT STATUSLINE_SHOW_FIVE_HOUR
@@ -33,7 +34,8 @@ load_config() {
     . "$conf"
     [ -n "$snapshot" ] && eval "$snapshot"
   fi
-  : "${STATUSLINE_BAR_WIDTH:=10}"       # width of the 5h/expanded-7d bars
+  : "${STATUSLINE_BAR_WIDTH:=10}"       # width of the 5h bar
+  : "${STATUSLINE_SEVEN_DAY_BAR_WIDTH:=14}"  # width of the expanded 7d bar
   : "${STATUSLINE_PCT_WARN:=50}"        # usage severity green -> yellow
   : "${STATUSLINE_PCT_CRIT:=80}"        # usage severity yellow -> red
   : "${STATUSLINE_PACE_TOL:=5}"         # ± points that still count as "on pace"

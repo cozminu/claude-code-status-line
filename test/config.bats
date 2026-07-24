@@ -44,6 +44,14 @@ EOF
   [[ "${lines[1]}" == *"3h █░▯░"* ]]
 }
 
+@test "config file overrides default: seven-day bar width" {
+  echo 'STATUSLINE_SEVEN_DAY_BAR_WIDTH=4' > "$STATUSLINE_CONFIG"
+  # full.json: 7d usage 60%, elapsed 50% -> over pace, expands.
+  # 60% of 4 cells -> 2 filled, tick at cell 2 (50% elapsed), solid (at/ahead of pace)
+  run bash -c "'$SCRIPT' < '$BATS_TEST_DIRNAME/fixtures/full.json' | sed \$'s/\033\\[[0-9;]*m//g'"
+  [[ "${lines[1]}" == *"██▮░"* ]]
+}
+
 @test "environment overrides config file" {
   echo 'STATUSLINE_BAR_WIDTH=4' > "$STATUSLINE_CONFIG"
   run bash -c "STATUSLINE_BAR_WIDTH=6 '$SCRIPT' < '$BATS_TEST_DIRNAME/fixtures/full.json' | sed \$'s/\033\\[[0-9;]*m//g'"
