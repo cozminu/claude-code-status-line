@@ -145,7 +145,7 @@ EOF
   local dir="$BATS_TEST_TMPDIR/fake-claude-emotion"
   mkdir -p "$dir/cache"
   echo '{"emotion":"curious"}' > "$dir/cache/claude-emotion.json"
-  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S 2>/dev/null || date -d "@$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
   [[ "$(CLAUDE_CONFIG_DIR="$dir" render_full | strip_ansi)" == *"curious"* ]]
 }
 
@@ -153,7 +153,7 @@ EOF
   local dir="$BATS_TEST_TMPDIR/fake-claude-emotion"
   mkdir -p "$dir/cache"
   echo '{"emotion":"curious"}' > "$dir/cache/claude-emotion.json"
-  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S 2>/dev/null || date -d "@$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
   [[ "$(CLAUDE_CONFIG_DIR="$dir" STATUSLINE_SHOW_EMOTION=0 render_full | strip_ansi)" != *"curious"* ]]
 }
 
@@ -161,7 +161,7 @@ EOF
   local dir="$BATS_TEST_TMPDIR/fake-claude-emotion"
   mkdir -p "$dir/cache"
   echo '{"emotion":"desperate"}' > "$dir/cache/claude-emotion.json"
-  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S 2>/dev/null || date -d "@$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
   [[ "$(CLAUDE_CONFIG_DIR="$dir" render_full | strip_ansi)" == *"DESPERATE — verify output quality"* ]]
 }
 
@@ -169,7 +169,7 @@ EOF
   local dir="$BATS_TEST_TMPDIR/fake-claude-emotion"
   mkdir -p "$dir/cache"
   echo '{"emotion":"flabbergasted"}' > "$dir/cache/claude-emotion.json"
-  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S 2>/dev/null || date -d "@$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
   local out
   # emotion is the first segment on line 2, so an uncolored render means line 2
   # begins with the bare word — no leading escape sequence at all.

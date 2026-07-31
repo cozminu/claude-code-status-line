@@ -273,7 +273,7 @@ setup() {
   mkdir -p "$dir/cache"
   echo '{"emotion":"curious"}' > "$dir/cache/claude-emotion.json"
   local mtime
-  mtime=$(stat -f %m "$dir/cache/claude-emotion.json")
+  mtime=$(stat -f %m "$dir/cache/claude-emotion.json" 2>/dev/null || stat -c %Y "$dir/cache/claude-emotion.json")
   [ "$(CLAUDE_CONFIG_DIR="$dir" PAYLOAD_SESSION_ID='' STATUSLINE_NOW="$(( mtime + 600 ))" emotion_state)" = "curious" ]
 }
 
@@ -282,7 +282,7 @@ setup() {
   mkdir -p "$dir/cache"
   echo '{"emotion":"curious"}' > "$dir/cache/claude-emotion.json"
   local mtime
-  mtime=$(stat -f %m "$dir/cache/claude-emotion.json")
+  mtime=$(stat -f %m "$dir/cache/claude-emotion.json" 2>/dev/null || stat -c %Y "$dir/cache/claude-emotion.json")
   [ "$(CLAUDE_CONFIG_DIR="$dir" PAYLOAD_SESSION_ID='' STATUSLINE_NOW="$(( mtime + 601 ))" emotion_state)" = "" ]
 }
 

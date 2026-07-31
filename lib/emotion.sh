@@ -17,7 +17,9 @@ emotion_state() {
   [ -f "$file" ] || return 0
 
   local mtime now age
-  mtime=$(stat -f %m "$file" 2>/dev/null) || return 0
+  # stat's mtime flag differs between BSD (macOS) and GNU: try BSD's -f %m
+  # first, then fall back to GNU's -c %Y so this works on both.
+  mtime=$(stat -f %m "$file" 2>/dev/null || stat -c %Y "$file" 2>/dev/null) || return 0
   now="${STATUSLINE_NOW:-$(date +%s)}"
   age=$(( now - mtime ))
   [ "$age" -le 600 ] || return 0

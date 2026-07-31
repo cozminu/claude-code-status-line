@@ -40,8 +40,9 @@ colors (red vs. orange) so they stay visually distinct. Segments whose data
 is missing from the payload (no effort, API-key billing without rate limits,
 not a git repo, ...) drop out silently.
 
-The emotion label is read from `~/.claude/cache/claude-emotion-<session_id>.json`
-(falling back to `~/.claude/cache/claude-emotion.json`), written by the
+The emotion label is read from `$CLAUDE_CONFIG_DIR` (default `~/.claude`)
+`/cache/claude-emotion-<session_id>.json` (falling back to
+`$CLAUDE_CONFIG_DIR/cache/claude-emotion.json`), written by the
 independently-installed `emotion-statusline` plugin's `Stop` hook — this repo
 never classifies emotion itself, only renders a cache file up to 10 minutes
 old. `desperate` renders as a bold-red `DESPERATE — verify output quality`

@@ -33,6 +33,10 @@ segment_emotion() {
     unknown)       color="$DIM" ;;
     *)             color="" ;;
   esac
-  printf '%s%s%s' "$color" "$emotion" "$RESET"
+  if [ -n "$color" ]; then
+    printf '%s%s%s' "$color" "$emotion" "$RESET"
+  else
+    printf '%s' "$emotion"
+  fi
 }
 register_segment 2 emotion segment_emotion STATUSLINE_SHOW_EMOTION

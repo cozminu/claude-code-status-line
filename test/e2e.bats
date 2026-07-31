@@ -85,7 +85,7 @@ check_golden() {
 }
 
 @test "emotion cache present: colored emotion label leads line 2" {
-  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" \
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S 2>/dev/null || date -d "@$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" \
     "$BATS_TEST_DIRNAME/fixtures/fake-claude-emotion/cache/claude-emotion.json"
   CLAUDE_CONFIG_DIR="$BATS_TEST_DIRNAME/fixtures/fake-claude-emotion" \
     STATUSLINE_NOW="$STATUSLINE_EPOCH" "$SCRIPT" \
@@ -95,7 +95,7 @@ check_golden() {
 }
 
 @test "emotion cache says desperate: bold red warning leads line 2" {
-  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" \
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S 2>/dev/null || date -d "@$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" \
     "$BATS_TEST_DIRNAME/fixtures/fake-claude-emotion-desperate/cache/claude-emotion.json"
   CLAUDE_CONFIG_DIR="$BATS_TEST_DIRNAME/fixtures/fake-claude-emotion-desperate" \
     STATUSLINE_NOW="$STATUSLINE_EPOCH" "$SCRIPT" \
