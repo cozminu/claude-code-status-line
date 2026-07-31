@@ -21,6 +21,7 @@ parse_payload() {
   PAYLOAD_SEVEN_D_RESET=""
   PAYLOAD_COST_USD=""
   PAYLOAD_REPO_NAME=""
+  PAYLOAD_SESSION_ID=""
 
   local key value
   while IFS=$'\t' read -r key value; do
@@ -36,6 +37,7 @@ parse_payload() {
       seven_d_reset) PAYLOAD_SEVEN_D_RESET="$value" ;;
       cost_usd)      PAYLOAD_COST_USD="$value" ;;
       repo_name)     PAYLOAD_REPO_NAME="$value" ;;
+      session_id)    PAYLOAD_SESSION_ID="$value" ;;
       *) : ;;  # unknown key: ignore, forward-compatible with future fields
     esac
   done < <(jq -r '
@@ -49,6 +51,7 @@ parse_payload() {
     "seven_d_pct\t\(.rate_limits.seven_day.used_percentage // "")",
     "seven_d_reset\t\(.rate_limits.seven_day.resets_at // "")",
     "cost_usd\t\(.cost.total_cost_usd // "")",
-    "repo_name\t\(.workspace.repo.name // "")"
+    "repo_name\t\(.workspace.repo.name // "")",
+    "session_id\t\(.session_id // "")"
   ')
 }

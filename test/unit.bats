@@ -232,3 +232,15 @@ setup() {
   echo '{}' > "$dir/.claude.json"
   [ "$(CLAUDE_CONFIG_DIR="$dir" account_email)" = "" ]
 }
+
+# --- parse_payload (session_id) ------------------------------------------------
+
+@test "parse_payload: extracts session_id into PAYLOAD_SESSION_ID" {
+  parse_payload <<< '{"session_id":"abc-123"}'
+  [ "$PAYLOAD_SESSION_ID" = "abc-123" ]
+}
+
+@test "parse_payload: PAYLOAD_SESSION_ID is empty when session_id is absent" {
+  parse_payload <<< '{}'
+  [ "$PAYLOAD_SESSION_ID" = "" ]
+}
