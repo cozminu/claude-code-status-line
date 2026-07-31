@@ -40,6 +40,7 @@ lib/
   payload.sh              # parse_payload(): one jq pass over stdin -> PAYLOAD_* globals
   git.sh                  # git_segment_text(): line-1 branch/dirty-state text
   account.sh              # account_email(): line-3 logged-in account lookup
+  emotion.sh               # emotion_state(): line-2 emotion-statusline plugin cache lookup
   main.sh                 # main(): orchestration only
 segments/                 # one file per built-in segment (10-title.sh ... 90-email.sh)
 ```
@@ -56,7 +57,7 @@ Configuration is resolved by `load_config` (`lib/config.sh`) with precedence env
 
 **Line 1** (default order: `title git`): project title (repo name, falling back to directory basename) → git branch with dirty/clean indicator, plus staged/modified/untracked file counts (`+N`/`~N`/`?N`) when dirty.
 
-**Line 2** (default order: `model effort context five_hour seven_day cost`): model name (colored by family — opus/sonnet/haiku/fable) → reasoning effort level (colored low→max on a green→yellow→teal→red→magenta scale) → context-window usage tokens → 5-hour subscription rate-limit usage bar → 7-day usage marker (a compact single-cell pace gauge that expands into a full bar only when weekly usage is over pace) → session cost. The rate-limit segments are bracket-free; their labels are a live reset countdown, rounded up to the nearest quarter-unit and shown as a mixed number (`2½h`, `3½d`, ...) rather than a fixed period name — see `reset_countdown` below. Order/membership is just the default for `STATUSLINE_LINE2_SEGMENTS` — see the Segment registry section above.
+**Line 2** (default order: `emotion model effort context five_hour seven_day cost`): the emotion-statusline plugin's cached emotion label (see below) → model name (colored by family — opus/sonnet/haiku/fable) → reasoning effort level (colored low→max on a green→yellow→teal→red→magenta scale) → context-window usage tokens → 5-hour subscription rate-limit usage bar → 7-day usage marker (a compact single-cell pace gauge that expands into a full bar only when weekly usage is over pace) → session cost. The rate-limit segments are bracket-free; their labels are a live reset countdown, rounded up to the nearest quarter-unit and shown as a mixed number (`2½h`, `3½d`, ...) rather than a fixed period name — see `reset_countdown` below. Order/membership is just the default for `STATUSLINE_LINE2_SEGMENTS` — see the Segment registry section above.
 
 Two bar renderers (`lib/helpers.sh`):
 - `bar(pct, width)` — plain filled/empty progress bar (█/░), `width` cells.
@@ -69,5 +70,23 @@ The 5h window renders through `usage_segment(label, pct, reset, window_seconds)`
 The 7d window has its own `seven_day_segment(label, pct, reset, window_seconds)` helper (`lib/helpers.sh`, called from `segments/70-seven-day.sh`) because it renders two ways. By default it's a **compact single-cell pace marker** — one partial-block glyph (`▁▂▃▄▅▆▇█`, via `gauge_glyph`, mapping usage % to 8 levels) whose height encodes usage. It **expands into a full `pace_bar`** (width `STATUSLINE_SEVEN_DAY_BAR_WIDTH`, independent of the 5h bar's `STATUSLINE_BAR_WIDTH`) only when weekly usage runs genuinely over pace — when `used_percentage − elapsed_pace > STATUSLINE_PACE_TOL`, the same band where `pace_color` turns to its above-pace color, so expansion and that color trigger together. The entire 7d element is colored on the pace scale throughout via `pace_color(pct, elapsed_pct)` (default `above_color` = `$ORANGE`) — so the expanded bar is always orange. When no reset time is present pace is unknowable, so it stays a compact marker colored by `pct_color` usage severity and never expands. Both 5h and 7d share the `pace_color` scale (green/yellow/above-pace) but pass different `above_color` values — `$RED` for 5h, `$ORANGE` for 7d — so the two segments stay visually distinct. (Because 7d only expands when over pace, its `pace_bar` tick is always the solid `▮` form.)
 
 Branch, dirty state, and staged/modified/untracked counts are all derived from a single `git -C "$cwd" --no-optional-locks status --porcelain=v2 --branch` call, parsed once, in `git_segment_text(cwd)` (`lib/git.sh`, called from `segments/20-git.sh`). The whole segment is skipped when that call returns empty (not inside a git repo) — there's no error path, checks just fail closed via `[ -n ... ]` guards.
+
+The emotion segment (`segments/25-emotion.sh`, `segment_emotion()`) is the
+one line-2 segment that, like the line-3 email segment, ignores the stdin
+payload's own fields (beyond `PAYLOAD_SESSION_ID`, used only to pick which
+cache file to read) and instead reads external state: `emotion_state()`
+(`lib/emotion.sh`) looks up `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/cache/claude-emotion-<session_id>.json`,
+falling back to `.../cache/claude-emotion.json`, written by the
+separately-installed `emotion-statusline` plugin's `Stop` hook (not part of
+this repo). A cache file older than 600s (via the same `STATUSLINE_NOW`
+injection point as `elapsed_pct_of_window`/`reset_countdown`) is treated as
+absent (staleness is `age > 600`, so a file exactly 600s old still renders).
+Each of the 14 emotion names maps to one of `lib/colors.sh`'s
+existing constants; `desperate` is special-cased to a bold-red
+`DESPERATE — verify output quality` warning instead of the bare word,
+matching the upstream plugin's behavior (its "Anthropic's research on
+emotion concepts" is what motivates this — see the plugin's own README for
+detail). An emotion name outside the mapped set still renders in plain,
+uncolored text rather than being dropped.
 
 **Line 3** (default order: `email`, optional and off by default via `STATUSLINE_SHOW_EMAIL`): the logged-in Claude account's email. This is the one segment that ignores the stdin payload entirely — `STDIN_PAYLOAD.md` documents no account/user field — and instead reads `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.claude.json` → `.oauthAccount.emailAddress` via `account_email()` (`lib/account.sh`, called from `segments/90-email.sh`), which fails closed to `""` (missing dir/file/field, malformed JSON) exactly like the other guarded segments. It renders whenever an email is present and its show-var is `"1"`, regardless of which profile (`CLAUDE_CONFIG_DIR`) is active.

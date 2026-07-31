@@ -5,7 +5,7 @@ render. This documents the full payload so we know what's available beyond the
 subset `statusline-command.sh` currently consumes.
 
 - **Confirmed against:** Claude Code CLI `v2.1.206` (field names extracted from the binary)
-- **Script currently uses:** ~11 fields (marked ✅ below)
+- **Script currently uses:** ~12 fields (marked ✅ below)
 - Fields can be added across versions — capture a live sample (see bottom) to see the exact current shape.
 
 ## Top-level fields
@@ -13,7 +13,7 @@ subset `statusline-command.sh` currently consumes.
 | Field | Used by script? | What it is |
 |---|---|---|
 | `hook_event_name` | no | Event type, e.g. `"Status"` |
-| `session_id` | no | Current session UUID |
+| `session_id` | ✅ | Current session UUID — picks the per-session emotion cache file |
 | `transcript_path` | no | Path to the session's `.jsonl` transcript |
 | `cwd` | ✅ | Current working directory |
 | `version` | no | Claude Code version string |

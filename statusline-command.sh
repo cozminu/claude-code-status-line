@@ -1,7 +1,7 @@
 #!/bin/bash
 # Claude Code statusLine script
 # Line 1: project title | git branch (dirty indicator + staged/modified counts)
-# Line 2: model name | effort level | context tokens used | 5h + 7d subscription usage | session cost
+# Line 2: emotion state | model name | effort level | context tokens used | 5h + 7d subscription usage | session cost
 #
 # Thin entrypoint: sources lib/ (colors, config, registry, helpers, payload
 # parsing, git, account) and every built-in segments/*.sh, then defines

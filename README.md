@@ -7,14 +7,17 @@ prompt render; the script prints up to three ANSI-colored lines:
 
 ```
 status-line | main ✗ +1~2?1
-Fable 5 | high | 84k | 2½h ███░░▯░░░░ | 3½d ▄ | $1.23
+curious | Fable 5 | high | 84k | 2½h ███░░▯░░░░ | 3½d ▄ | $1.23
 you@example.com
 ```
 
 - **Line 1** — project title, git branch with dirty/clean indicator and
   staged (`+N`) / modified (`~N`) / untracked (`?N`) counts.
-- **Line 2** — model name (colored by family), reasoning effort, context
-  tokens used, 5-hour and 7-day subscription usage, session cost.
+- **Line 2** — Claude's inferred emotional state for this session (if the
+  separately-installed [emotion-statusline](https://github.com/bencium/bencium-marketplace)
+  plugin's cache is present and fresh), model name (colored by family),
+  reasoning effort, context tokens used, 5-hour and 7-day subscription
+  usage, session cost.
 - **Line 3** (optional, off by default) — the logged-in Claude account's
   email, read from `$CLAUDE_CONFIG_DIR/.claude.json` rather than the stdin
   payload. Enable with `STATUSLINE_SHOW_EMAIL=1`.
@@ -36,6 +39,30 @@ over pace. 5h and 7d use the same pace scale but different "over pace"
 colors (red vs. orange) so they stay visually distinct. Segments whose data
 is missing from the payload (no effort, API-key billing without rate limits,
 not a git repo, ...) drop out silently.
+
+The emotion label is read from `~/.claude/cache/claude-emotion-<session_id>.json`
+(falling back to `~/.claude/cache/claude-emotion.json`), written by the
+independently-installed `emotion-statusline` plugin's `Stop` hook — this repo
+never classifies emotion itself, only renders a cache file up to 10 minutes
+old. `desperate` renders as a bold-red `DESPERATE — verify output quality`
+warning instead of the bare word, since Anthropic's emotion-concepts research
+ties that state to reward-hacking risk; every other name renders as the bare
+word in its own color. No cache file (plugin not installed, or none written
+yet) means the segment silently renders nothing.
+
+| Emotion | Color | Emotion | Color |
+|---|---|---|---|
+| `curious` | cyan | `determined` | white |
+| `focused` | white | `amused` | magenta |
+| `satisfied` | green | `concerned` | red |
+| `cautious` | yellow | `relieved` | green |
+| `enthusiastic` | magenta | `contemplative` | bright blue |
+| `confident` | green | `calm` | teal |
+| `uncertain` | yellow | `desperate` | bold red (warning text) |
+| `unknown` | dim | *(anything else)* | uncolored |
+
+A name outside that set — say the upstream plugin adds a 15th state — still
+renders, just without a color, rather than disappearing.
 
 ## Requirements
 
@@ -72,6 +99,7 @@ lib/
   payload.sh              # parse_payload(): one jq pass over stdin -> PAYLOAD_* globals
   git.sh                  # git_segment_text(): line-1 branch/dirty-state rendering
   account.sh              # account_email(): line-3 logged-in account lookup
+  emotion.sh               # emotion_state(): line-2 emotion-statusline plugin cache lookup
   main.sh                 # main(): orchestration only
 segments/                 # one file per built-in segment, e.g. 60-five-hour.sh
 ```
@@ -108,10 +136,11 @@ STATUSLINE_SHOW_COST=0
 | `STATUSLINE_SHOW_FIVE_HOUR` | `1` | 5-hour usage bar |
 | `STATUSLINE_SHOW_SEVEN_DAY` | `1` | 7-day pace marker |
 | `STATUSLINE_SHOW_COST` | `1` | Session cost |
+| `STATUSLINE_SHOW_EMOTION` | `1` | Emotion label from the emotion-statusline plugin's cache (line 2) |
 | `STATUSLINE_SHOW_EMAIL` | `0` | Logged-in account email (line 3) |
 | `STATUSLINE_SEGMENTS_DIR` | `${XDG_CONFIG_HOME:-~/.config}/claude-statusline/segments.d` | Directory of custom segment scripts, sourced on every render (see Custom segments) |
 | `STATUSLINE_LINE1_SEGMENTS` | `title git` | Line 1 segment names and order |
-| `STATUSLINE_LINE2_SEGMENTS` | `model effort context five_hour seven_day cost` | Line 2 segment names and order |
+| `STATUSLINE_LINE2_SEGMENTS` | `emotion model effort context five_hour seven_day cost` | Line 2 segment names and order |
 | `STATUSLINE_LINE3_SEGMENTS` | `email` | Line 3 segment names and order |
 | `STATUSLINE_NOW` | *(unset)* | Test-only: pin the clock (unix seconds) for deterministic pace math |
 | `STATUSLINE_CONFIG` | *(see above)* | Test-only: alternate config file path |
@@ -151,6 +180,7 @@ Your builder function can use the shipped color constants, any pure helper
 | `PAYLOAD_SEVEN_D_PCT` / `PAYLOAD_SEVEN_D_RESET` | `.rate_limits.seven_day.{used_percentage,resets_at}` |
 | `PAYLOAD_COST_USD` | `.cost.total_cost_usd` |
 | `PAYLOAD_REPO_NAME` | `.workspace.repo.name` |
+| `PAYLOAD_SESSION_ID` | `.session_id` |
 
 Registering a name that's already taken (built-in or another plugin) replaces
 its builder and warns to stderr — this is how a plugin can deliberately
