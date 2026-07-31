@@ -141,6 +141,42 @@ EOF
   [ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" = "2" ]
 }
 
+@test "emotion toggle on by default: cache emotion leads line 2" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude-emotion"
+  mkdir -p "$dir/cache"
+  echo '{"emotion":"curious"}' > "$dir/cache/claude-emotion.json"
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
+  [[ "$(CLAUDE_CONFIG_DIR="$dir" render_full | strip_ansi)" == *"curious"* ]]
+}
+
+@test "emotion toggle off: cache emotion hidden even when present" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude-emotion"
+  mkdir -p "$dir/cache"
+  echo '{"emotion":"curious"}' > "$dir/cache/claude-emotion.json"
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
+  [[ "$(CLAUDE_CONFIG_DIR="$dir" STATUSLINE_SHOW_EMOTION=0 render_full | strip_ansi)" != *"curious"* ]]
+}
+
+@test "emotion desperate case: renders the bold-red warning text" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude-emotion"
+  mkdir -p "$dir/cache"
+  echo '{"emotion":"desperate"}' > "$dir/cache/claude-emotion.json"
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
+  [[ "$(CLAUDE_CONFIG_DIR="$dir" render_full | strip_ansi)" == *"DESPERATE — verify output quality"* ]]
+}
+
+@test "emotion unrecognized: renders as plain uncolored text rather than dropping" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude-emotion"
+  mkdir -p "$dir/cache"
+  echo '{"emotion":"flabbergasted"}' > "$dir/cache/claude-emotion.json"
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
+  local out
+  # emotion is the first segment on line 2, so an uncolored render means line 2
+  # begins with the bare word — no leading escape sequence at all.
+  out=$(CLAUDE_CONFIG_DIR="$dir" render_full | sed -n 2p)
+  [[ "$out" == "flabbergasted"* ]]
+}
+
 @test "title toggle empties line 1 for a non-git payload" {
   local plain
   plain=$(STATUSLINE_SHOW_TITLE=0 "$SCRIPT" < "$BATS_TEST_DIRNAME/fixtures/full.json" | strip_ansi)
@@ -161,6 +197,7 @@ EOF
   run env STATUSLINE_SHOW_TITLE=0 STATUSLINE_SHOW_GIT=0 STATUSLINE_SHOW_MODEL=0 \
     STATUSLINE_SHOW_EFFORT=0 STATUSLINE_SHOW_CONTEXT=0 STATUSLINE_SHOW_FIVE_HOUR=0 \
     STATUSLINE_SHOW_SEVEN_DAY=0 STATUSLINE_SHOW_COST=0 STATUSLINE_SHOW_EMAIL=0 \
+    STATUSLINE_SHOW_EMOTION=0 \
     bash -c "'$SCRIPT' < '$BATS_TEST_DIRNAME/fixtures/full.json'"
   [ "$status" -eq 0 ]
   [ "$output" = "" ]
