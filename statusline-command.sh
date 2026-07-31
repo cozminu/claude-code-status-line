@@ -27,6 +27,8 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$DIR/lib/git.sh"
 # shellcheck source=lib/account.sh
 . "$DIR/lib/account.sh"
+# shellcheck source=lib/emotion.sh
+. "$DIR/lib/emotion.sh"
 
 # Built-in segments: shipped, trusted files, safe to source unconditionally
 # (unlike the user plugin dir, which is only sourced inside main() — see

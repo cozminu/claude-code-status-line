@@ -244,3 +244,62 @@ setup() {
   parse_payload <<< '{}'
   [ "$PAYLOAD_SESSION_ID" = "" ]
 }
+
+# --- emotion_state --------------------------------------------------------------
+
+@test "emotion_state: reads emotion from a fresh session-specific cache file" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude"
+  mkdir -p "$dir/cache"
+  echo '{"emotion":"curious"}' > "$dir/cache/claude-emotion-sess1.json"
+  [ "$(CLAUDE_CONFIG_DIR="$dir" PAYLOAD_SESSION_ID=sess1 emotion_state)" = "curious" ]
+}
+
+@test "emotion_state: falls back to the global cache file when there is no session id" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude"
+  mkdir -p "$dir/cache"
+  echo '{"emotion":"calm"}' > "$dir/cache/claude-emotion.json"
+  [ "$(CLAUDE_CONFIG_DIR="$dir" PAYLOAD_SESSION_ID='' emotion_state)" = "calm" ]
+}
+
+@test "emotion_state: falls back to the global cache when the session-specific file doesn't exist" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude"
+  mkdir -p "$dir/cache"
+  echo '{"emotion":"focused"}' > "$dir/cache/claude-emotion.json"
+  [ "$(CLAUDE_CONFIG_DIR="$dir" PAYLOAD_SESSION_ID=sess-missing emotion_state)" = "focused" ]
+}
+
+@test "emotion_state: a cache exactly 600s old is still fresh" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude"
+  mkdir -p "$dir/cache"
+  echo '{"emotion":"curious"}' > "$dir/cache/claude-emotion.json"
+  local mtime
+  mtime=$(stat -f %m "$dir/cache/claude-emotion.json")
+  [ "$(CLAUDE_CONFIG_DIR="$dir" PAYLOAD_SESSION_ID='' STATUSLINE_NOW="$(( mtime + 600 ))" emotion_state)" = "curious" ]
+}
+
+@test "emotion_state: empty string once the cache is older than 600s" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude"
+  mkdir -p "$dir/cache"
+  echo '{"emotion":"curious"}' > "$dir/cache/claude-emotion.json"
+  local mtime
+  mtime=$(stat -f %m "$dir/cache/claude-emotion.json")
+  [ "$(CLAUDE_CONFIG_DIR="$dir" PAYLOAD_SESSION_ID='' STATUSLINE_NOW="$(( mtime + 601 ))" emotion_state)" = "" ]
+}
+
+@test "emotion_state: empty string when no cache file exists" {
+  [ "$(CLAUDE_CONFIG_DIR="$BATS_TEST_TMPDIR/no-such-claude-dir" PAYLOAD_SESSION_ID='' emotion_state)" = "" ]
+}
+
+@test "emotion_state: empty string when the cache file is malformed JSON" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude"
+  mkdir -p "$dir/cache"
+  echo 'not json' > "$dir/cache/claude-emotion.json"
+  [ "$(CLAUDE_CONFIG_DIR="$dir" PAYLOAD_SESSION_ID='' emotion_state)" = "" ]
+}
+
+@test "emotion_state: empty string when the cache file has no emotion field" {
+  local dir="$BATS_TEST_TMPDIR/fake-claude"
+  mkdir -p "$dir/cache"
+  echo '{}' > "$dir/cache/claude-emotion.json"
+  [ "$(CLAUDE_CONFIG_DIR="$dir" PAYLOAD_SESSION_ID='' emotion_state)" = "" ]
+}
