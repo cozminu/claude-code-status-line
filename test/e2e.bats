@@ -84,6 +84,26 @@ check_golden() {
   diff "$BATS_TEST_DIRNAME/golden/email.out" "$BATS_TEST_TMPDIR/email.out"
 }
 
+@test "emotion cache present: colored emotion label leads line 2" {
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" \
+    "$BATS_TEST_DIRNAME/fixtures/fake-claude-emotion/cache/claude-emotion.json"
+  CLAUDE_CONFIG_DIR="$BATS_TEST_DIRNAME/fixtures/fake-claude-emotion" \
+    STATUSLINE_NOW="$STATUSLINE_EPOCH" "$SCRIPT" \
+    < "$BATS_TEST_DIRNAME/fixtures/full.json" \
+    > "$BATS_TEST_TMPDIR/emotion.out"
+  diff "$BATS_TEST_DIRNAME/golden/emotion.out" "$BATS_TEST_TMPDIR/emotion.out"
+}
+
+@test "emotion cache says desperate: bold red warning leads line 2" {
+  touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" \
+    "$BATS_TEST_DIRNAME/fixtures/fake-claude-emotion-desperate/cache/claude-emotion.json"
+  CLAUDE_CONFIG_DIR="$BATS_TEST_DIRNAME/fixtures/fake-claude-emotion-desperate" \
+    STATUSLINE_NOW="$STATUSLINE_EPOCH" "$SCRIPT" \
+    < "$BATS_TEST_DIRNAME/fixtures/full.json" \
+    > "$BATS_TEST_TMPDIR/emotion-desperate.out"
+  diff "$BATS_TEST_DIRNAME/golden/emotion-desperate.out" "$BATS_TEST_TMPDIR/emotion-desperate.out"
+}
+
 @test "script exits 0 for every fixture" {
   local f
   for f in "$BATS_TEST_DIRNAME"/fixtures/*.json; do
