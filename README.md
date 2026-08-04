@@ -45,10 +45,10 @@ The emotion label is read from `$CLAUDE_CONFIG_DIR` (default `~/.claude`)
 `$CLAUDE_CONFIG_DIR/cache/claude-emotion.json`), written by the
 independently-installed `emotion-statusline` plugin's `Stop` hook — this repo
 never classifies emotion itself, only renders a cache file up to 10 minutes
-old. `desperate` renders as a bold-red `DESPERATE — verify output quality`
-warning instead of the bare word, since Anthropic's emotion-concepts research
-ties that state to reward-hacking risk; every other name renders as the bare
-word in its own color. No cache file (plugin not installed, or none written
+old. `desperate` renders as a bold-red `DESPERATE` instead of the bare word,
+since Anthropic's emotion-concepts research ties that state to
+reward-hacking risk; every other name renders as the bare word in its own
+color. No cache file (plugin not installed, or none written
 yet) means the segment silently renders nothing.
 
 | Emotion | Color | Emotion | Color |
@@ -126,8 +126,11 @@ STATUSLINE_SHOW_COST=0
 |---|---|---|
 | `STATUSLINE_BAR_WIDTH` | `10` | Width (cells) of the 5h bar |
 | `STATUSLINE_SEVEN_DAY_BAR_WIDTH` | `14` | Width (cells) of the expanded 7d bar |
-| `STATUSLINE_PCT_WARN` | `50` | Usage severity threshold: green → yellow |
-| `STATUSLINE_PCT_CRIT` | `80` | Usage severity threshold: yellow → red |
+| `STATUSLINE_PCT_WARN` | `50` | Usage severity threshold: green → yellow (5h/7d bars) |
+| `STATUSLINE_PCT_CRIT` | `80` | Usage severity threshold: yellow → red (5h/7d bars) |
+| `STATUSLINE_CTX_PCT_WARN` | `20` | Context severity threshold: green → yellow |
+| `STATUSLINE_CTX_PCT_ORANGE` | `40` | Context severity threshold: yellow → orange |
+| `STATUSLINE_CTX_PCT_CRIT` | `60` | Context severity threshold: orange → red |
 | `STATUSLINE_PACE_TOL` | `5` | ± percentage points that still count as "on pace" for the 5h/7d bars (also the 7d expansion trigger) |
 | `STATUSLINE_SHOW_TITLE` | `1` | Project title (set any toggle to `0` to hide) |
 | `STATUSLINE_SHOW_GIT` | `1` | Git branch + file counts |

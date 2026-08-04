@@ -31,6 +31,9 @@ strip_ansi() {
 STATUSLINE_BAR_WIDTH=10
 STATUSLINE_PCT_WARN=50
 STATUSLINE_PCT_CRIT=80
+STATUSLINE_CTX_PCT_WARN=20
+STATUSLINE_CTX_PCT_ORANGE=40
+STATUSLINE_CTX_PCT_CRIT=60
 STATUSLINE_PACE_TOL=5
 EOF
   diff "$BATS_TEST_DIRNAME/golden/full.out" <(render_full)
@@ -59,11 +62,25 @@ EOF
   [[ "${lines[1]}" == *"2½h █░░▯░░"* ]]
 }
 
-@test "warn threshold is tunable: 42% context turns yellow when warn=30" {
-  echo 'STATUSLINE_PCT_WARN=30' > "$STATUSLINE_CONFIG"
+@test "context warn threshold is tunable: 42% context turns green when ctx warn=50" {
+  echo 'STATUSLINE_CTX_PCT_WARN=50' > "$STATUSLINE_CONFIG"
+  local GREEN=$'\033[32m'
+  run render_full
+  [[ "${lines[1]}" == *"${GREEN}84k"* ]]
+}
+
+@test "context orange threshold is tunable: 42% context turns yellow when ctx orange=50" {
+  echo 'STATUSLINE_CTX_PCT_ORANGE=50' > "$STATUSLINE_CONFIG"
   local YELLOW=$'\033[33m'
   run render_full
   [[ "${lines[1]}" == *"${YELLOW}84k"* ]]
+}
+
+@test "context crit threshold is tunable: 42% context turns red when ctx crit=30" {
+  echo 'STATUSLINE_CTX_PCT_CRIT=30' > "$STATUSLINE_CONFIG"
+  local RED=$'\033[31m'
+  run render_full
+  [[ "${lines[1]}" == *"${RED}84k"* ]]
 }
 
 @test "pace tolerance is tunable: 7d 10 points over pace stays compact when tol=15" {
@@ -162,7 +179,7 @@ EOF
   mkdir -p "$dir/cache"
   echo '{"emotion":"desperate"}' > "$dir/cache/claude-emotion.json"
   touch -t "$(date -r "$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S 2>/dev/null || date -d "@$STATUSLINE_EPOCH" +%Y%m%d%H%M.%S)" "$dir/cache/claude-emotion.json"
-  [[ "$(CLAUDE_CONFIG_DIR="$dir" render_full | strip_ansi)" == *"DESPERATE — verify output quality"* ]]
+  [[ "$(CLAUDE_CONFIG_DIR="$dir" render_full | strip_ansi)" == *"DESPERATE"* ]]
 }
 
 @test "emotion unrecognized: renders as plain uncolored text rather than dropping" {

@@ -11,7 +11,7 @@ segment_emotion() {
   [ -n "$emotion" ] || return
 
   if [ "$emotion" = "desperate" ]; then
-    printf '%sDESPERATE — verify output quality%s' "$BOLD_RED" "$RESET"
+    printf '%sDESPERATE%s' "$BOLD_RED" "$RESET"
     return
   fi
 

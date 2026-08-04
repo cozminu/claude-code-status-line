@@ -51,6 +51,22 @@ pct_color() {
   fi
 }
 
+# Context segment's own 4-band usage severity scale (green -> yellow ->
+# orange -> red), independent of pct_color's green/yellow/red scale used by
+# the 5h/7d bars.
+ctx_pct_color() {
+  local pct_int="$1"
+  if [ "$pct_int" -lt "$STATUSLINE_CTX_PCT_WARN" ]; then
+    printf "%s" "$GREEN"
+  elif [ "$pct_int" -lt "$STATUSLINE_CTX_PCT_ORANGE" ]; then
+    printf "%s" "$YELLOW"
+  elif [ "$pct_int" -lt "$STATUSLINE_CTX_PCT_CRIT" ]; then
+    printf "%s" "$ORANGE"
+  else
+    printf "%s" "$RED"
+  fi
+}
+
 bar() {
   local pct="$1" width="$2"
   local filled=$(( pct * width / 100 ))

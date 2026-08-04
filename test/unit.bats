@@ -39,6 +39,17 @@ setup() {
   [ "$(pct_color 100)" = "$RED" ]
 }
 
+@test "ctx_pct_color: green below warn, yellow below orange, orange below crit, red at and above crit" {
+  [ "$(ctx_pct_color 0)" = "$GREEN" ]
+  [ "$(ctx_pct_color 19)" = "$GREEN" ]
+  [ "$(ctx_pct_color 20)" = "$YELLOW" ]
+  [ "$(ctx_pct_color 39)" = "$YELLOW" ]
+  [ "$(ctx_pct_color 40)" = "$ORANGE" ]
+  [ "$(ctx_pct_color 59)" = "$ORANGE" ]
+  [ "$(ctx_pct_color 60)" = "$RED" ]
+  [ "$(ctx_pct_color 100)" = "$RED" ]
+}
+
 @test "pace_color: green under pace, yellow within ±tolerance, orange over (default above_color)" {
   [ "$(pace_color 40 50)" = "$GREEN" ]   # 10 under
   [ "$(pace_color 45 50)" = "$YELLOW" ]  # exactly -tol

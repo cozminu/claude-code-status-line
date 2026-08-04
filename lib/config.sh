@@ -10,7 +10,8 @@
 # load_config's env-wins-over-file snapshot/reassert applies to them too.
 STATUSLINE_CONFIG_VARS="STATUSLINE_BAR_WIDTH STATUSLINE_SEVEN_DAY_BAR_WIDTH
   STATUSLINE_PCT_WARN
-  STATUSLINE_PCT_CRIT STATUSLINE_PACE_TOL STATUSLINE_SHOW_TITLE
+  STATUSLINE_PCT_CRIT STATUSLINE_CTX_PCT_WARN STATUSLINE_CTX_PCT_ORANGE
+  STATUSLINE_CTX_PCT_CRIT STATUSLINE_PACE_TOL STATUSLINE_SHOW_TITLE
   STATUSLINE_SHOW_GIT STATUSLINE_SHOW_MODEL STATUSLINE_SHOW_EFFORT
   STATUSLINE_SHOW_CONTEXT STATUSLINE_SHOW_FIVE_HOUR
   STATUSLINE_SHOW_SEVEN_DAY STATUSLINE_SHOW_COST STATUSLINE_SHOW_EMAIL
@@ -39,6 +40,9 @@ load_config() {
   : "${STATUSLINE_SEVEN_DAY_BAR_WIDTH:=14}"  # width of the expanded 7d bar
   : "${STATUSLINE_PCT_WARN:=50}"        # usage severity green -> yellow
   : "${STATUSLINE_PCT_CRIT:=80}"        # usage severity yellow -> red
+  : "${STATUSLINE_CTX_PCT_WARN:=20}"    # context severity green -> yellow
+  : "${STATUSLINE_CTX_PCT_ORANGE:=40}"  # context severity yellow -> orange
+  : "${STATUSLINE_CTX_PCT_CRIT:=60}"    # context severity orange -> red
   : "${STATUSLINE_PACE_TOL:=5}"         # ± points that still count as "on pace"
   : "${STATUSLINE_SHOW_TITLE:=1}"       # segment toggles: 1 shows, 0 hides
   : "${STATUSLINE_SHOW_GIT:=1}"

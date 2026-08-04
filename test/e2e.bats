@@ -55,11 +55,11 @@ check_golden() {
   check_golden five-hour-ahead
 }
 
-@test "boundaries below thresholds: 49% green ctx, 79% yellow 5h, 999 tokens" {
+@test "boundaries below thresholds: 49% orange ctx, 79% yellow 5h, 999 tokens" {
   check_golden boundary-low
 }
 
-@test "boundaries at thresholds: 50% yellow ctx, 80% red 5h, 1k tokens" {
+@test "boundaries at thresholds: 50% orange ctx, 80% red 5h, 1k tokens" {
   check_golden boundary-high
 }
 
