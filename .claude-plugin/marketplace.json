@@ -1,0 +1,14 @@
+{
+  "name": "cozminu",
+  "owner": {
+    "name": "Cozmin Ungureanu",
+    "email": "ucozmin@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "claude-statusline",
+      "source": "./",
+      "description": "Bash-rendered, configurable Claude Code status line."
+    }
+  ]
+}

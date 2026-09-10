@@ -1,0 +1,12 @@
+{
+  "name": "claude-statusline",
+  "description": "Bash-rendered, configurable Claude Code status line: git branch/dirty state, model, context usage, 5h/7d rate-limit bars with pace tracking, session cost.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Cozmin Ungureanu",
+    "email": "ucozmin@gmail.com"
+  },
+  "homepage": "https://github.com/cozminu/claude-code-status-line",
+  "repository": "https://github.com/cozminu/claude-code-status-line",
+  "license": "MIT"
+}
