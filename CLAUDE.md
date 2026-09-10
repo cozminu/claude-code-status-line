@@ -12,7 +12,7 @@ The whole thing must stay **bash 3.2 compatible** (macOS system bash): no `mapfi
 
 ## Testing changes
 
-Run `./run-tests.sh` after every change — it runs the vendored bats suites (`test/*.bats`, nothing to install) plus shellcheck when available. The e2e suite compares fixture payloads (`test/fixtures/*.json`) against `test/golden/*.out` **byte-for-byte** with the clock pinned via `STATUSLINE_NOW=1750000000`; a golden failure means output behavior changed. If the change is intentional, regenerate with `test/regen-golden.sh` and review the golden diff; never regenerate to silence an accidental regression. Lint runs as `shellcheck -x statusline-command.sh` (follows the `# shellcheck source=lib/*.sh` directives, merging the entrypoint with `lib/*.sh` into one analysis unit) plus `shellcheck segments/*.sh` separately (the entrypoint sources `segments/*.sh` via a runtime glob, which `-x` can't follow) — keep both at zero findings.
+Run `./run-tests.sh` after every change — it runs the vendored bats suites (`test/*.bats`, nothing to install) plus shellcheck when available. The e2e suite compares fixture payloads (`test/fixtures/*.json`) against `test/golden/*.out` **byte-for-byte** with the clock pinned via `STATUSLINE_NOW=1750000000`; a golden failure means output behavior changed. If the change is intentional, regenerate with `test/regen-golden.sh` and review the golden diff; never regenerate to silence an accidental regression. Lint runs as `shellcheck -x statusline-command.sh` (follows the `# shellcheck source=lib/*.sh` directives, merging the entrypoint with `lib/*.sh` into one analysis unit) plus `shellcheck segments/*.sh` (the entrypoint sources `segments/*.sh` via a runtime glob, which `-x` can't follow) and `shellcheck scripts/*.sh` (standalone executables, never sourced) separately — keep all three at zero findings.
 
 For one-off manual checks, pipe a synthetic payload:
 
@@ -20,11 +20,50 @@ For one-off manual checks, pipe a synthetic payload:
 echo '{"model":{"display_name":"Sonnet 5"},"workspace":{"current_dir":"'"$PWD"'"},"cost":{"total_cost_usd":1.23}}' | ./statusline-command.sh
 ```
 
-New behavior needs a test in the matching suite: pure helpers → `test/unit.bats` (the script is `source`d, helpers called directly), full renders → a fixture + golden in `test/e2e.bats`, config handling → `test/config.bats`, git segment → `test/git.bats` (builds throwaway repos), segment registry/ordering/plugins → `test/segments.bats`. Tests set `STATUSLINE_CONFIG` to a nonexistent path so a real user config can't leak in, `CLAUDE_CONFIG_DIR` to a nonexistent path so a real logged-in account email can't leak in, and `STATUSLINE_SEGMENTS_DIR` to a nonexistent path so a real `segments.d` plugin directory can't leak in either — new suites must do all three.
+New behavior needs a test in the matching suite: pure helpers → `test/unit.bats` (the script is `source`d, helpers called directly), full renders → a fixture + golden in `test/e2e.bats`, config handling → `test/config.bats`, git segment → `test/git.bats` (builds throwaway repos), segment registry/ordering/plugins → `test/segments.bats`, plugin packaging (manifests, `scripts/setup.sh`, `scripts/check-wiring.sh`) → `test/manifest.bats`, `test/setup.bats`, `test/hook.bats`. Tests set `STATUSLINE_CONFIG` to a nonexistent path so a real user config can't leak in, `CLAUDE_CONFIG_DIR` to a nonexistent path so a real logged-in account email can't leak in, and `STATUSLINE_SEGMENTS_DIR` to a nonexistent path so a real `segments.d` plugin directory can't leak in either — new suites must do all three.
 
 ## Adding a built-in segment
 
 Create `segments/NN-name.sh` (the numeric prefix documents default order — pick a gap between existing files, or append), define a zero-argument `segment_name()` that reads `PAYLOAD_*`/`STATUSLINE_*` globals and prints the rendered text (or nothing to omit itself), and call `register_segment <line> <name> segment_name [show-var]` at the file's top level. Add any new pure formatting logic to `lib/helpers.sh` with unit coverage in `test/unit.bats`; add an e2e fixture+golden if it changes default output; add a `test/config.bats` toggle test if it has a `STATUSLINE_SHOW_*` var.
+
+## Plugin packaging
+
+The repo is both a single-plugin Claude Code marketplace and the plugin
+itself — nothing moves, `statusline-command.sh` still lives at the repo
+root and the from-a-clone install keeps working unchanged.
+
+`.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` are the
+manifests; the marketplace has exactly one entry, `source: "./"`, pointing
+at the repo root. Bump the version only in `plugin.json` — the marketplace
+entry omits a version so a release touches one file.
+
+`scripts/setup.sh` is the only thing in this repo allowed to write
+`settings.json`. It resolves its own directory the same way
+`statusline-command.sh` does (`BASH_SOURCE`-relative, no dependency on
+`CLAUDE_PLUGIN_ROOT` being exported), and writes through `jq` into a temp
+file followed by `mv` so a crash mid-write can't truncate a real user's
+settings file. `skills/setup/SKILL.md` (invoked as `/claude-statusline:setup`)
+is a thin wrapper around it — it must never hand-edit `settings.json`
+itself, even when `setup.sh` refuses non-interactively; routing around the
+single writer defeats the point of having one.
+
+`scripts/check-wiring.sh`, run by a `SessionStart` hook (`hooks/hooks.json`,
+matcher `startup`) declared with `${CLAUDE_PLUGIN_ROOT}`, is read-only and
+must never write `settings.json`. It must stay silent (empty stdout, exit
+0) whenever wiring is healthy — `SessionStart` output is injected into
+Claude's context on every new session, so the healthy case has to cost zero
+tokens — and only print a one-line nudge when `statusLine` is missing or
+points at a stale version of this same plugin (a `/plugin update` moves the
+install to a new version-pinned cache path). It stays silent when
+`statusLine` points at something else entirely, since that's someone else's
+deliberate choice. Both scripts carry their own copy of the "is this a
+stale version of this plugin" check (a `case` match on
+`*/plugins/cache/*/claude-statusline/*/statusline-command.sh`); keep the
+two in sync if that pattern ever changes.
+
+`run-tests.sh`'s shellcheck step also covers `scripts/*.sh` (a third pass
+alongside the entrypoint and `segments/*.sh`, since standalone executables
+aren't reachable via a `# shellcheck source=` directive either).
 
 ## Architecture
 

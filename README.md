@@ -71,6 +71,31 @@ renders, just without a color, rather than disappearing.
 
 ## Install
 
+### As a plugin (recommended)
+
+```
+/plugin marketplace add cozminu/claude-code-status-line
+/plugin install claude-statusline@cozminu
+/claude-statusline:setup
+```
+
+The first two commands fetch the plugin; the third writes
+`statusLine.command` in `~/.claude/settings.json` for you (see
+[`scripts/setup.sh`](scripts/setup.sh) — it's the only thing in this repo
+allowed to touch that file). A `SessionStart` hook checks that wiring on
+every new session and tells you to re-run `/claude-statusline:setup` if it
+ever goes stale (for example after `/plugin update`, since installs live in
+a version-pinned cache path).
+
+Updating: `/plugin update claude-statusline@cozminu`, then re-run
+`/claude-statusline:setup` if the hook nudges you to.
+
+Uninstalling: `/plugin uninstall claude-statusline@cozminu` removes the
+plugin's files but leaves the `statusLine` key in `settings.json` behind —
+remove it by hand, or run `/statusline` to replace it with something else.
+
+### From a clone
+
 Clone the repo somewhere stable, then point `statusLine.command` in
 `~/.claude/settings.json` directly at the cloned `statusline-command.sh`
 (no symlink needed — the script finds its own `lib/`/`segments/` files
@@ -86,6 +111,27 @@ relative to wherever it lives):
 ```
 
 Moving or renaming the cloned directory later means updating this path.
+
+### Live countdown labels
+
+The 5h/7d labels (`2½h`, `3½d`, ...) are time-based and, like the rest of
+the status line, only re-render on Claude Code's own events (a new message,
+git state changing, and so on) — they won't visibly count down while a
+session sits idle. Set `refreshInterval` (seconds, minimum `1`) in
+`statusLine` to also re-run the script on a timer:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "/absolute/path/to/status-line/statusline-command.sh",
+    "refreshInterval": 60
+  }
+}
+```
+
+It's a Claude Code `statusLine` setting, not one of this repo's own
+`STATUSLINE_*` variables, so it isn't in the Configuration table below.
 
 ## File layout
 
@@ -201,7 +247,7 @@ vendored under `test/vendor/` — nothing to install:
 ./run-tests.sh
 ```
 
-runs five suites (`shellcheck` is included as a lint step when installed):
+runs eight suites (`shellcheck` is included as a lint step when installed):
 
 - `test/unit.bats` — the pure helpers, called directly on the sourced script.
 - `test/e2e.bats` — golden tests: fixture payloads (`test/fixtures/`) piped
@@ -212,6 +258,12 @@ runs five suites (`shellcheck` is included as a lint step when installed):
 - `test/segments.bats` — the segment registry: default order, config-driven
   reordering, custom plugin segments, and that plugins only run under a real
   render, never when the entrypoint is merely sourced.
+- `test/manifest.bats` — `.claude-plugin/plugin.json`/`marketplace.json`
+  parse and shape, `skills/setup/SKILL.md` frontmatter.
+- `test/setup.bats` — `scripts/setup.sh`'s `settings.json` decision table,
+  `--force`, the non-interactive refusal.
+- `test/hook.bats` — `scripts/check-wiring.sh`'s SessionStart nudge,
+  including the silent-when-healthy case.
 
 If you change the output *intentionally*, regenerate the goldens with
 `test/regen-golden.sh` and review the diff; otherwise a failing golden test
