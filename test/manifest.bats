@@ -20,3 +20,11 @@ setup() {
   [ "$(jq -r '.plugins[0].name' "$f")" = "claude-statusline" ]
   [ "$(jq -r '.plugins[0].source' "$f")" = "./" ]
 }
+
+@test "setup skill has frontmatter naming it setup" {
+  local f="$BATS_TEST_DIRNAME/../skills/setup/SKILL.md"
+  [ -f "$f" ]
+  [ "$(sed -n '1p' "$f")" = "---" ]
+  grep -q '^name: setup$' "$f"
+  grep -q '^description:' "$f"
+}
